@@ -83,7 +83,8 @@
                 </div>
             </div>
         </div>
-        {% for key, datos in fsc.resumen.por_categoria if datos.count > 0 and key != 'sin_clasificar' %}
+        {% for key, datos in fsc.resumen.por_categoria %}
+        {% if datos.count > 0 and key != 'sin_clasificar' %}
         <div class="col-md-3 mt-2">
             <div class="card shadow-sm" style="border-left: 4px solid {{ fsc.categorias[key].color }};">
                 <div class="card-body text-center py-2">
@@ -93,6 +94,7 @@
                 </div>
             </div>
         </div>
+        {% endif %}
         {% endfor %}
         {% if fsc.resumen.por_categoria.sin_clasificar is defined and fsc.resumen.por_categoria.sin_clasificar.count > 0 %}
         <div class="col-md-3 mt-2">

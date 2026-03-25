@@ -9,49 +9,22 @@ use FacturaScripts\Plugins\AnalisisLineas\Model\LineaClasificacion;
 
 class AnalisisLineas extends Controller
 {
-    /** @var array */
     public $resultados = [];
-
-    /** @var array */
     public $resumen = [];
-
-    /** @var array */
     public $clientes = [];
-
-    /** @var array */
     public $series = [];
-
-    /** @var array */
     public $datosGrafico = [];
-
-    /** @var array */
     public $datosGraficoMensual = [];
-
-    /** @var string */
+    public $categorias = [];
     public $fechaDesde = '';
-
-    /** @var string */
     public $fechaHasta = '';
-
-    /** @var string */
     public $codcliente = '';
-
-    /** @var string */
     public $codserie = '';
-
-    /** @var string */
     public $clasificacion = '';
-
-    /** @var string */
     public $busqueda = '';
-
-    /** @var int */
     public $pagina = 0;
-
-    /** @var int */
     public $totalPaginas = 0;
 
-    /** @var int */
     private $porPagina = 50;
 
     public function getPageData(): array
@@ -70,16 +43,12 @@ class AnalisisLineas extends Controller
     {
         parent::privateCore($response, $user, $permissions);
 
-        // Semilla de palabras clave por defecto
         LineaClasificacion::seedDefaults();
+        $this->categorias = LineaClasificacion::getCategorias();
 
-        // Cargar listas para filtros
         $this->cargarClientes();
         $this->cargarSeries();
 
-        $db = new DataBase();
-
-        // Leer filtros de la request
         $this->fechaDesde = $this->request->query->get('fechadesde', date('Y-01-01'));
         $this->fechaHasta = $this->request->query->get('fechahasta', date('Y-m-d'));
         $this->codcliente = $this->request->query->get('codcliente', '');
@@ -88,14 +57,12 @@ class AnalisisLineas extends Controller
         $this->busqueda = $this->request->query->get('busqueda', '');
         $this->pagina = (int) $this->request->query->get('pagina', 0);
 
-        // Exportar CSV si se solicita
         if ($this->request->query->get('export') === 'csv') {
-            $this->exportarCSV($db);
+            $this->exportarCSV();
             return;
         }
 
-        // Ejecutar análisis
-        $this->ejecutarAnalisis($db);
+        $this->ejecutarAnalisis();
     }
 
     public function getTemplate(): string
@@ -103,91 +70,163 @@ class AnalisisLineas extends Controller
         return 'AnalisisLineas.html.twig';
     }
 
-    private function ejecutarAnalisis(DataBase $db): void
+    private function ejecutarAnalisis(): void
     {
-        $palabrasManoObra = $this->getPalabrasClave('mano_de_obra');
-        $palabrasMaterial = $this->getPalabrasClave('material');
+        $db = new DataBase();
+        $keywordsAgrupadas = LineaClasificacion::getAllGrouped();
 
         $sql = $this->buildSQL($db);
         $todasLineas = $db->select($sql);
-
         if ($todasLineas === false) {
             $todasLineas = [];
         }
 
         $lineasClasificadas = [];
-        $totalManoObra = 0;
-        $totalMaterial = 0;
-        $totalSinClasificar = 0;
-        $countManoObra = 0;
-        $countMaterial = 0;
-        $countSinClasificar = 0;
+        $totalesPorCategoria = [];
+        $countPorCategoria = [];
         $mensual = [];
 
+        foreach ($this->categorias as $key => $cat) {
+            $totalesPorCategoria[$key] = 0;
+            $countPorCategoria[$key] = 0;
+        }
+
         foreach ($todasLineas as $linea) {
-            $tipo = $this->clasificarLinea($linea, $palabrasManoObra, $palabrasMaterial);
+            // Omitir lineas separadoras (--- Albaran, --- Pedido, etc.)
+            if ($this->esSeparador($linea)) {
+                continue;
+            }
+
+            $tipo = $this->clasificarLinea($linea, $keywordsAgrupadas);
             $linea['clasificacion'] = $tipo;
             $pvptotal = (float) ($linea['pvptotal'] ?? 0);
 
-            switch ($tipo) {
-                case 'mano_de_obra':
-                    $totalManoObra += $pvptotal;
-                    $countManoObra++;
-                    break;
-                case 'material':
-                    $totalMaterial += $pvptotal;
-                    $countMaterial++;
-                    break;
-                default:
-                    $totalSinClasificar += $pvptotal;
-                    $countSinClasificar++;
-                    break;
+            if (isset($totalesPorCategoria[$tipo])) {
+                $totalesPorCategoria[$tipo] += $pvptotal;
+                $countPorCategoria[$tipo]++;
             }
 
             $mes = substr($linea['fecha'] ?? '', 0, 7);
-            if (!isset($mensual[$mes])) {
-                $mensual[$mes] = ['mano_de_obra' => 0, 'material' => 0, 'sin_clasificar' => 0];
+            if (!empty($mes)) {
+                if (!isset($mensual[$mes])) {
+                    $mensual[$mes] = [];
+                }
+                if (!isset($mensual[$mes][$tipo])) {
+                    $mensual[$mes][$tipo] = 0;
+                }
+                $mensual[$mes][$tipo] += $pvptotal;
             }
-            $mensual[$mes][$tipo] += $pvptotal;
 
             $lineasClasificadas[] = $linea;
         }
 
-        // Filtrar por clasificación si se ha seleccionado
+        // Filtrar por clasificacion si se ha seleccionado
         if (!empty($this->clasificacion)) {
             $lineasClasificadas = array_values(array_filter($lineasClasificadas, function ($l) {
                 return $l['clasificacion'] === $this->clasificacion;
             }));
         }
 
-        $totalGeneral = $totalManoObra + $totalMaterial + $totalSinClasificar;
+        // Resumen
+        $totalGeneral = array_sum($totalesPorCategoria);
+        $countTotal = array_sum($countPorCategoria);
         $this->resumen = [
-            'total_mano_obra' => $totalManoObra,
-            'total_material' => $totalMaterial,
-            'total_sin_clasificar' => $totalSinClasificar,
             'total_general' => $totalGeneral,
-            'count_mano_obra' => $countManoObra,
-            'count_material' => $countMaterial,
-            'count_sin_clasificar' => $countSinClasificar,
-            'count_total' => count($todasLineas),
-            'pct_mano_obra' => $totalGeneral > 0 ? round($totalManoObra / $totalGeneral * 100, 1) : 0,
-            'pct_material' => $totalGeneral > 0 ? round($totalMaterial / $totalGeneral * 100, 1) : 0,
-            'pct_sin_clasificar' => $totalGeneral > 0 ? round($totalSinClasificar / $totalGeneral * 100, 1) : 0,
+            'count_total' => $countTotal,
+            'por_categoria' => [],
         ];
 
-        $this->datosGrafico = [
-            'mano_de_obra' => round($totalManoObra, 2),
-            'material' => round($totalMaterial, 2),
-            'sin_clasificar' => round($totalSinClasificar, 2),
-        ];
+        foreach ($this->categorias as $key => $cat) {
+            if ($countPorCategoria[$key] > 0 || $key === 'sin_clasificar') {
+                $this->resumen['por_categoria'][$key] = [
+                    'total' => $totalesPorCategoria[$key],
+                    'count' => $countPorCategoria[$key],
+                    'pct' => $totalGeneral > 0 ? round($totalesPorCategoria[$key] / $totalGeneral * 100, 1) : 0,
+                ];
+            }
+        }
+
+        // Datos para grafico
+        $this->datosGrafico = [];
+        foreach ($this->categorias as $key => $cat) {
+            if ($totalesPorCategoria[$key] > 0) {
+                $this->datosGrafico[$key] = round($totalesPorCategoria[$key], 2);
+            }
+        }
 
         ksort($mensual);
         $this->datosGraficoMensual = $mensual;
 
+        // Paginacion
         $totalLineas = count($lineasClasificadas);
         $this->totalPaginas = max(1, (int) ceil($totalLineas / $this->porPagina));
         $this->pagina = max(0, min($this->pagina, $this->totalPaginas - 1));
         $this->resultados = array_slice($lineasClasificadas, $this->pagina * $this->porPagina, $this->porPagina);
+    }
+
+    /**
+     * Detecta si una linea es un separador (--- Albaran, --- Pedido, etc.)
+     */
+    private function esSeparador(array $linea): bool
+    {
+        $desc = trim($linea['descripcion'] ?? '');
+        $cantidad = (float) ($linea['cantidad'] ?? 0);
+        $precio = (float) ($linea['pvpunitario'] ?? 0);
+
+        // Lineas que empiezan por "---" son separadores
+        if (str_starts_with($desc, '---')) {
+            return true;
+        }
+
+        // Lineas con cantidad 0, precio 0 y total 0
+        if ($cantidad == 0 && $precio == 0 && (float)($linea['pvptotal'] ?? 0) == 0) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Clasifica una linea recorriendo las categorias por orden de prioridad
+     */
+    private function clasificarLinea(array $linea, array $keywordsAgrupadas): string
+    {
+        $descripcion = $this->normalizarTexto($linea['descripcion'] ?? '');
+
+        // Recorrer categorias por orden (el array ya viene ordenado por el campo orden)
+        // Primero obtener el orden de prioridad de las categorias
+        $prioridad = [
+            'mano_de_obra', 'licencia_microsoft', 'antivirus', 'dominio', 'hosting',
+            'camara', 'centralita', 'telefonia', 'servidor_cloud', 'correo',
+            'firma_digital', 'internet', 'impresora', 'software', 'consultoria',
+            'diseno_web', 'monitor', 'periferico', 'cable_red', 'componente', 'hardware',
+        ];
+
+        foreach ($prioridad as $tipo) {
+            if (!isset($keywordsAgrupadas[$tipo])) {
+                continue;
+            }
+            foreach ($keywordsAgrupadas[$tipo] as $palabra) {
+                if (mb_strpos($descripcion, $this->normalizarTexto($palabra)) !== false) {
+                    return $tipo;
+                }
+            }
+        }
+
+        // Si tiene referencia de producto pero no encaja en ninguna categoria
+        if (!empty($linea['referencia'])) {
+            return 'hardware';
+        }
+
+        return 'sin_clasificar';
+    }
+
+    private function normalizarTexto(string $texto): string
+    {
+        $texto = mb_strtoupper($texto, 'UTF-8');
+        $acentos = ['Á', 'É', 'Í', 'Ó', 'Ú', 'Ñ', 'Ü', 'À', 'È', 'Ì', 'Ò', 'Ù'];
+        $sinAcentos = ['A', 'E', 'I', 'O', 'U', 'N', 'U', 'A', 'E', 'I', 'O', 'U'];
+        return str_replace($acentos, $sinAcentos, $texto);
     }
 
     private function buildSQL(DataBase $db): string
@@ -214,68 +253,11 @@ class AnalisisLineas extends Controller
         return $sql;
     }
 
-    private function clasificarLinea(array $linea, array $palabrasManoObra, array $palabrasMaterial): string
-    {
-        $descripcion = $this->normalizarTexto($linea['descripcion'] ?? '');
-        $pvpunitario = (float) ($linea['pvpunitario'] ?? 0);
-        $cantidad = (float) ($linea['cantidad'] ?? 0);
-
-        // Si la linea tiene importe 0 y cantidad 0, es una linea de texto/separador
-        if ($pvpunitario == 0 && $cantidad == 0) {
-            return 'sin_clasificar';
-        }
-
-        // 1. Comprobar palabras clave de mano de obra en la descripcion
-        foreach ($palabrasManoObra as $palabra) {
-            if (mb_strpos($descripcion, $this->normalizarTexto($palabra)) !== false) {
-                return 'mano_de_obra';
-            }
-        }
-
-        // 2. Comprobar palabras clave de material
-        foreach ($palabrasMaterial as $palabra) {
-            if (mb_strpos($descripcion, $this->normalizarTexto($palabra)) !== false) {
-                return 'material';
-            }
-        }
-
-        // 3. Si tiene referencia de producto, es material
-        if (!empty($linea['referencia'])) {
-            return 'material';
-        }
-
-        // 4. No se puede clasificar automaticamente
-        return 'sin_clasificar';
-    }
-
-    /**
-     * Normaliza texto: mayusculas y sin tildes/acentos para comparar
-     */
-    private function normalizarTexto(string $texto): string
-    {
-        $texto = mb_strtoupper($texto, 'UTF-8');
-        $acentos = ['Á', 'É', 'Í', 'Ó', 'Ú', 'Ñ', 'Ü', 'À', 'È', 'Ì', 'Ò', 'Ù'];
-        $sinAcentos = ['A', 'E', 'I', 'O', 'U', 'N', 'U', 'A', 'E', 'I', 'O', 'U'];
-        return str_replace($acentos, $sinAcentos, $texto);
-    }
-
-    private function getPalabrasClave(string $tipo): array
-    {
-        $items = LineaClasificacion::getByTipo($tipo);
-        $palabras = [];
-        foreach ($items as $item) {
-            $palabras[] = $item->palabra_clave;
-        }
-        return $palabras;
-    }
-
     private function cargarClientes(): void
     {
         $db = new DataBase();
-        $sql = "SELECT DISTINCT f.codcliente, f.nombrecliente"
-            . " FROM facturascli f"
-            . " WHERE f.codcliente IS NOT NULL"
-            . " ORDER BY f.nombrecliente";
+        $sql = "SELECT DISTINCT f.codcliente, f.nombrecliente FROM facturascli f"
+            . " WHERE f.codcliente IS NOT NULL ORDER BY f.nombrecliente";
         $result = $db->select($sql);
         $this->clientes = $result !== false ? $result : [];
     }
@@ -288,10 +270,11 @@ class AnalisisLineas extends Controller
         $this->series = $result !== false ? $result : [];
     }
 
-    private function exportarCSV(DataBase $db): void
+    private function exportarCSV(): void
     {
-        $palabrasManoObra = $this->getPalabrasClave('mano_de_obra');
-        $palabrasMaterial = $this->getPalabrasClave('material');
+        $db = new DataBase();
+        $keywordsAgrupadas = LineaClasificacion::getAllGrouped();
+        $categorias = LineaClasificacion::getCategorias();
 
         $sql = $this->buildSQL($db);
         $lineas = $db->select($sql);
@@ -299,14 +282,18 @@ class AnalisisLineas extends Controller
             $lineas = [];
         }
 
-        foreach ($lineas as &$linea) {
-            $linea['clasificacion'] = $this->clasificarLinea($linea, $palabrasManoObra, $palabrasMaterial);
-        }
+        $lineasFiltradas = [];
+        foreach ($lineas as $linea) {
+            if ($this->esSeparador($linea)) {
+                continue;
+            }
+            $tipo = $this->clasificarLinea($linea, $keywordsAgrupadas);
+            $linea['clasificacion'] = $tipo;
 
-        if (!empty($this->clasificacion)) {
-            $lineas = array_filter($lineas, function ($l) {
-                return $l['clasificacion'] === $this->clasificacion;
-            });
+            if (!empty($this->clasificacion) && $tipo !== $this->clasificacion) {
+                continue;
+            }
+            $lineasFiltradas[] = $linea;
         }
 
         $filename = 'analisis_lineas_' . date('Ymd_His') . '.csv';
@@ -322,27 +309,16 @@ class AnalisisLineas extends Controller
             'Dto %', 'IVA %', 'Total Neto', 'Clasificacion'
         ], ';');
 
-        foreach ($lineas as $linea) {
-            $tipoLabel = match ($linea['clasificacion']) {
-                'mano_de_obra' => 'Mano de obra',
-                'material' => 'Material',
-                default => 'Sin clasificar',
-            };
+        foreach ($lineasFiltradas as $linea) {
+            $tipoLabel = $categorias[$linea['clasificacion']]['label'] ?? $linea['clasificacion'];
 
             fputcsv($output, [
-                $linea['codigo'] ?? '',
-                $linea['fecha'] ?? '',
-                $linea['codcliente'] ?? '',
-                $linea['nombrecliente'] ?? '',
-                $linea['codserie'] ?? '',
-                $linea['descripcion'] ?? '',
-                $linea['referencia'] ?? '',
-                $linea['cantidad'] ?? 0,
-                $linea['pvpunitario'] ?? 0,
-                $linea['dtopor'] ?? 0,
-                $linea['iva'] ?? 0,
-                $linea['pvptotal'] ?? 0,
-                $tipoLabel,
+                $linea['codigo'] ?? '', $linea['fecha'] ?? '',
+                $linea['codcliente'] ?? '', $linea['nombrecliente'] ?? '',
+                $linea['codserie'] ?? '', $linea['descripcion'] ?? '',
+                $linea['referencia'] ?? '', $linea['cantidad'] ?? 0,
+                $linea['pvpunitario'] ?? 0, $linea['dtopor'] ?? 0,
+                $linea['iva'] ?? 0, $linea['pvptotal'] ?? 0, $tipoLabel,
             ], ';');
         }
 

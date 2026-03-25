@@ -6,10 +6,8 @@
 
     <div class="row mb-3">
         <div class="col">
-            <h1 class="h3">
-                <i class="fa-solid fa-chart-pie"></i> Analisis de Lineas de Facturas
-            </h1>
-            <p class="text-muted">Clasificacion automatica de lineas en Mano de Obra y Material</p>
+            <h1 class="h3"><i class="fa-solid fa-chart-pie"></i> Analisis de Lineas de Facturas</h1>
+            <p class="text-muted mb-0">Clasificacion automatica en {{ fsc.categorias|length }} categorias</p>
         </div>
         <div class="col-auto">
             <a href="ConfigClasificacion" class="btn btn-outline-secondary">
@@ -18,130 +16,123 @@
         </div>
     </div>
 
+    {# FILTROS #}
     <form method="get" action="AnalisisLineas" class="mb-4">
         <div class="card shadow-sm">
-            <div class="card-header bg-primary text-white">
+            <div class="card-header bg-primary text-white py-2">
                 <i class="fa-solid fa-filter"></i> Filtros
             </div>
-            <div class="card-body">
-                <div class="row">
+            <div class="card-body py-2">
+                <div class="row g-2">
                     <div class="col-md-2">
-                        <label class="form-label"><strong>Desde</strong></label>
-                        <input type="date" name="fechadesde" class="form-control" value="{{ fsc.fechaDesde }}">
+                        <label class="form-label mb-0"><small><strong>Desde</strong></small></label>
+                        <input type="date" name="fechadesde" class="form-control form-control-sm" value="{{ fsc.fechaDesde }}">
                     </div>
                     <div class="col-md-2">
-                        <label class="form-label"><strong>Hasta</strong></label>
-                        <input type="date" name="fechahasta" class="form-control" value="{{ fsc.fechaHasta }}">
+                        <label class="form-label mb-0"><small><strong>Hasta</strong></small></label>
+                        <input type="date" name="fechahasta" class="form-control form-control-sm" value="{{ fsc.fechaHasta }}">
                     </div>
-                    <div class="col-md-3">
-                        <label class="form-label"><strong>Cliente</strong></label>
-                        <select name="codcliente" class="form-control">
+                    <div class="col-md-2">
+                        <label class="form-label mb-0"><small><strong>Cliente</strong></small></label>
+                        <select name="codcliente" class="form-control form-control-sm">
                             <option value="">-- Todos --</option>
                             {% for cliente in fsc.clientes %}
-                            <option value="{{ cliente.codcliente }}" {{ fsc.codcliente == cliente.codcliente ? 'selected' : '' }}>
-                                {{ cliente.nombrecliente }}
-                            </option>
+                            <option value="{{ cliente.codcliente }}" {{ fsc.codcliente == cliente.codcliente ? 'selected' : '' }}>{{ cliente.nombrecliente }}</option>
                             {% endfor %}
                         </select>
                     </div>
                     <div class="col-md-2">
-                        <label class="form-label"><strong>Serie</strong></label>
-                        <select name="codserie" class="form-control">
+                        <label class="form-label mb-0"><small><strong>Serie</strong></small></label>
+                        <select name="codserie" class="form-control form-control-sm">
                             <option value="">-- Todas --</option>
                             {% for serie in fsc.series %}
-                            <option value="{{ serie.codserie }}" {{ fsc.codserie == serie.codserie ? 'selected' : '' }}>
-                                {{ serie.codserie }} - {{ serie.descripcion }}
-                            </option>
+                            <option value="{{ serie.codserie }}" {{ fsc.codserie == serie.codserie ? 'selected' : '' }}>{{ serie.codserie }}</option>
                             {% endfor %}
                         </select>
                     </div>
                     <div class="col-md-2">
-                        <label class="form-label"><strong>Clasificacion</strong></label>
-                        <select name="clasificacion" class="form-control">
+                        <label class="form-label mb-0"><small><strong>Categoria</strong></small></label>
+                        <select name="clasificacion" class="form-control form-control-sm">
                             <option value="">-- Todas --</option>
-                            <option value="mano_de_obra" {{ fsc.clasificacion == 'mano_de_obra' ? 'selected' : '' }}>Mano de obra</option>
-                            <option value="material" {{ fsc.clasificacion == 'material' ? 'selected' : '' }}>Material</option>
-                            <option value="sin_clasificar" {{ fsc.clasificacion == 'sin_clasificar' ? 'selected' : '' }}>Sin clasificar</option>
+                            {% for key, cat in fsc.categorias %}
+                            <option value="{{ key }}" {{ fsc.clasificacion == key ? 'selected' : '' }}>{{ cat.label }}</option>
+                            {% endfor %}
                         </select>
                     </div>
-                    <div class="col-md-1 d-flex align-items-end">
-                        <button type="submit" class="btn btn-primary w-100">
-                            <i class="fa-solid fa-search"></i>
-                        </button>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary btn-sm w-100"><i class="fa-solid fa-search"></i> Filtrar</button>
                     </div>
                 </div>
-                <div class="row mt-2">
-                    <div class="col-md-6">
-                        <input type="text" name="busqueda" class="form-control" placeholder="Buscar en descripcion..." value="{{ fsc.busqueda }}">
+                <div class="row g-2 mt-1">
+                    <div class="col-md-4">
+                        <input type="text" name="busqueda" class="form-control form-control-sm" placeholder="Buscar en descripcion..." value="{{ fsc.busqueda }}">
                     </div>
                 </div>
             </div>
         </div>
     </form>
 
-    <div class="row mb-4">
+    {# RESUMEN: TOTAL + CATEGORIAS CON DATOS #}
+    <div class="row mb-3">
         <div class="col-md-3">
             <div class="card shadow-sm" style="border-left: 4px solid #0d6efd;">
-                <div class="card-body text-center">
-                    <h6 class="text-muted">Total Facturado</h6>
-                    <h3 class="text-primary">{{ fsc.resumen.total_general|number_format(2, ',', '.') }} &euro;</h3>
+                <div class="card-body text-center py-2">
+                    <h6 class="text-muted mb-1">Total Facturado</h6>
+                    <h4 class="text-primary mb-0">{{ fsc.resumen.total_general|number_format(2, ',', '.') }} &euro;</h4>
                     <small class="text-muted">{{ fsc.resumen.count_total }} lineas</small>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card shadow-sm" style="border-left: 4px solid #198754;">
-                <div class="card-body text-center">
-                    <h6 class="text-muted"><i class="fa-solid fa-hard-hat"></i> Mano de Obra</h6>
-                    <h3 class="text-success">{{ fsc.resumen.total_mano_obra|number_format(2, ',', '.') }} &euro;</h3>
-                    <small class="text-muted">{{ fsc.resumen.count_mano_obra }} lineas ({{ fsc.resumen.pct_mano_obra }}%)</small>
+        {% for key, datos in fsc.resumen.por_categoria if datos.count > 0 and key != 'sin_clasificar' %}
+        <div class="col-md-3 mt-2">
+            <div class="card shadow-sm" style="border-left: 4px solid {{ fsc.categorias[key].color }};">
+                <div class="card-body text-center py-2">
+                    <h6 class="text-muted mb-1"><i class="{{ fsc.categorias[key].icon }}"></i> {{ fsc.categorias[key].label }}</h6>
+                    <h5 class="mb-0" style="color: {{ fsc.categorias[key].color }};">{{ datos.total|number_format(2, ',', '.') }} &euro;</h5>
+                    <small class="text-muted">{{ datos.count }} lineas ({{ datos.pct }}%)</small>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card shadow-sm" style="border-left: 4px solid #fd7e14;">
-                <div class="card-body text-center">
-                    <h6 class="text-muted"><i class="fa-solid fa-box"></i> Material</h6>
-                    <h3 style="color: #fd7e14;">{{ fsc.resumen.total_material|number_format(2, ',', '.') }} &euro;</h3>
-                    <small class="text-muted">{{ fsc.resumen.count_material }} lineas ({{ fsc.resumen.pct_material }}%)</small>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
+        {% endfor %}
+        {% if fsc.resumen.por_categoria.sin_clasificar is defined and fsc.resumen.por_categoria.sin_clasificar.count > 0 %}
+        <div class="col-md-3 mt-2">
             <div class="card shadow-sm" style="border-left: 4px solid #6c757d;">
-                <div class="card-body text-center">
-                    <h6 class="text-muted"><i class="fa-solid fa-question-circle"></i> Sin Clasificar</h6>
-                    <h3 class="text-secondary">{{ fsc.resumen.total_sin_clasificar|number_format(2, ',', '.') }} &euro;</h3>
-                    <small class="text-muted">{{ fsc.resumen.count_sin_clasificar }} lineas ({{ fsc.resumen.pct_sin_clasificar }}%)</small>
+                <div class="card-body text-center py-2">
+                    <h6 class="text-muted mb-1"><i class="fa-solid fa-question"></i> Sin clasificar</h6>
+                    <h5 class="mb-0 text-secondary">{{ fsc.resumen.por_categoria.sin_clasificar.total|number_format(2, ',', '.') }} &euro;</h5>
+                    <small class="text-muted">{{ fsc.resumen.por_categoria.sin_clasificar.count }} lineas ({{ fsc.resumen.por_categoria.sin_clasificar.pct }}%)</small>
                 </div>
             </div>
         </div>
+        {% endif %}
     </div>
 
+    {# GRAFICOS #}
     <div class="row mb-4">
-        <div class="col-md-4">
+        <div class="col-md-5">
             <div class="card shadow-sm">
-                <div class="card-header"><i class="fa-solid fa-chart-pie"></i> Distribucion</div>
+                <div class="card-header py-2"><i class="fa-solid fa-chart-pie"></i> Distribucion</div>
                 <div class="card-body">
-                    <canvas id="graficoPastel" height="250"></canvas>
+                    <canvas id="graficoPastel" height="300"></canvas>
                 </div>
             </div>
         </div>
-        <div class="col-md-8">
+        <div class="col-md-7">
             <div class="card shadow-sm">
-                <div class="card-header"><i class="fa-solid fa-chart-bar"></i> Evolucion Mensual</div>
+                <div class="card-header py-2"><i class="fa-solid fa-chart-bar"></i> Evolucion Mensual</div>
                 <div class="card-body">
-                    <canvas id="graficoMensual" height="250"></canvas>
+                    <canvas id="graficoMensual" height="300"></canvas>
                 </div>
             </div>
         </div>
     </div>
 
+    {# TABLA #}
     <div class="card shadow-sm mb-4">
-        <div class="card-header d-flex justify-content-between align-items-center">
+        <div class="card-header py-2 d-flex justify-content-between align-items-center">
             <span><i class="fa-solid fa-list"></i> Detalle de Lineas</span>
             <a href="AnalisisLineas?fechadesde={{ fsc.fechaDesde }}&fechahasta={{ fsc.fechaHasta }}&codcliente={{ fsc.codcliente }}&codserie={{ fsc.codserie }}&clasificacion={{ fsc.clasificacion }}&busqueda={{ fsc.busqueda }}&export=csv" class="btn btn-sm btn-outline-success">
-                <i class="fa-solid fa-file-csv"></i> Exportar CSV
+                <i class="fa-solid fa-file-csv"></i> CSV
             </a>
         </div>
         <div class="card-body p-0">
@@ -153,41 +144,32 @@
                             <th>Fecha</th>
                             <th>Cliente</th>
                             <th>Descripcion</th>
-                            <th class="text-end">Cantidad</th>
-                            <th class="text-end">Precio Ud.</th>
-                            <th class="text-end">Dto %</th>
+                            <th class="text-end">Cant.</th>
+                            <th class="text-end">Precio</th>
                             <th class="text-end">Total</th>
-                            <th class="text-center">Clasificacion</th>
+                            <th class="text-center">Categoria</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for linea in fsc.resultados %}
                         <tr>
-                            <td>
-                                <a href="EditFacturaCliente?code={{ linea.idfactura }}">
-                                    {{ linea.codigo }}
-                                </a>
-                            </td>
+                            <td><a href="EditFacturaCliente?code={{ linea.idfactura }}">{{ linea.codigo }}</a></td>
                             <td>{{ linea.fecha }}</td>
-                            <td>{{ linea.nombrecliente }}</td>
-                            <td>{{ linea.descripcion|slice(0, 80) }}{% if linea.descripcion|length > 80 %}...{% endif %}</td>
+                            <td>{{ linea.nombrecliente|slice(0, 30) }}</td>
+                            <td>{{ linea.descripcion|slice(0, 70) }}{% if linea.descripcion|length > 70 %}...{% endif %}</td>
                             <td class="text-end">{{ linea.cantidad|number_format(2, ',', '.') }}</td>
-                            <td class="text-end">{{ linea.pvpunitario|number_format(2, ',', '.') }} &euro;</td>
-                            <td class="text-end">{{ linea.dtopor|number_format(1, ',', '.') }}%</td>
-                            <td class="text-end"><strong>{{ linea.pvptotal|number_format(2, ',', '.') }} &euro;</strong></td>
+                            <td class="text-end">{{ linea.pvpunitario|number_format(2, ',', '.') }}</td>
+                            <td class="text-end"><strong>{{ linea.pvptotal|number_format(2, ',', '.') }}</strong></td>
                             <td class="text-center">
-                                {% if linea.clasificacion == 'mano_de_obra' %}
-                                    <span class="badge bg-success"><i class="fa-solid fa-hard-hat"></i> Mano de obra</span>
-                                {% elseif linea.clasificacion == 'material' %}
-                                    <span class="badge bg-warning text-dark"><i class="fa-solid fa-box"></i> Material</span>
-                                {% else %}
-                                    <span class="badge bg-secondary"><i class="fa-solid fa-question"></i> Sin clasificar</span>
-                                {% endif %}
+                                {% set cat = fsc.categorias[linea.clasificacion] is defined ? fsc.categorias[linea.clasificacion] : {label: linea.clasificacion, color: '#6c757d', icon: 'fa-solid fa-tag'} %}
+                                <span class="badge" style="background-color: {{ cat.color }}; font-size: 0.7rem;">
+                                    <i class="{{ cat.icon }}"></i> {{ cat.label }}
+                                </span>
                             </td>
                         </tr>
                         {% else %}
                         <tr>
-                            <td colspan="9" class="text-center text-muted py-4">
+                            <td colspan="8" class="text-center text-muted py-4">
                                 <i class="fa-solid fa-inbox fa-2x mb-2 d-block"></i>
                                 No se encontraron lineas con los filtros seleccionados
                             </td>
@@ -197,26 +179,19 @@
                 </table>
             </div>
         </div>
-
         {% if fsc.totalPaginas > 1 %}
-        <div class="card-footer">
+        <div class="card-footer py-1">
             <nav>
                 <ul class="pagination pagination-sm justify-content-center mb-0">
                     {% if fsc.pagina > 0 %}
                     <li class="page-item">
-                        <a class="page-link" href="AnalisisLineas?fechadesde={{ fsc.fechaDesde }}&fechahasta={{ fsc.fechaHasta }}&codcliente={{ fsc.codcliente }}&codserie={{ fsc.codserie }}&clasificacion={{ fsc.clasificacion }}&busqueda={{ fsc.busqueda }}&pagina={{ fsc.pagina - 1 }}">
-                            &laquo; Anterior
-                        </a>
+                        <a class="page-link" href="AnalisisLineas?fechadesde={{ fsc.fechaDesde }}&fechahasta={{ fsc.fechaHasta }}&codcliente={{ fsc.codcliente }}&codserie={{ fsc.codserie }}&clasificacion={{ fsc.clasificacion }}&busqueda={{ fsc.busqueda }}&pagina={{ fsc.pagina - 1 }}">&laquo;</a>
                     </li>
                     {% endif %}
-                    <li class="page-item disabled">
-                        <span class="page-link">Pagina {{ fsc.pagina + 1 }} de {{ fsc.totalPaginas }}</span>
-                    </li>
+                    <li class="page-item disabled"><span class="page-link">{{ fsc.pagina + 1 }} / {{ fsc.totalPaginas }}</span></li>
                     {% if fsc.pagina < fsc.totalPaginas - 1 %}
                     <li class="page-item">
-                        <a class="page-link" href="AnalisisLineas?fechadesde={{ fsc.fechaDesde }}&fechahasta={{ fsc.fechaHasta }}&codcliente={{ fsc.codcliente }}&codserie={{ fsc.codserie }}&clasificacion={{ fsc.clasificacion }}&busqueda={{ fsc.busqueda }}&pagina={{ fsc.pagina + 1 }}">
-                            Siguiente &raquo;
-                        </a>
+                        <a class="page-link" href="AnalisisLineas?fechadesde={{ fsc.fechaDesde }}&fechahasta={{ fsc.fechaHasta }}&codcliente={{ fsc.codcliente }}&codserie={{ fsc.codserie }}&clasificacion={{ fsc.clasificacion }}&busqueda={{ fsc.busqueda }}&pagina={{ fsc.pagina + 1 }}">&raquo;</a>
                     </li>
                     {% endif %}
                 </ul>
@@ -230,25 +205,31 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    var categorias = {{ fsc.categorias|json_encode|raw }};
     var datosGrafico = {{ fsc.datosGrafico|json_encode|raw }};
     var datosMensual = {{ fsc.datosGraficoMensual|json_encode|raw }};
 
-    if (document.getElementById('graficoPastel')) {
+    // Grafico de pastel
+    var labels = [], datos = [], colores = [];
+    for (var key in datosGrafico) {
+        if (datosGrafico[key] > 0 && categorias[key]) {
+            labels.push(categorias[key].label);
+            datos.push(datosGrafico[key]);
+            colores.push(categorias[key].color);
+        }
+    }
+
+    if (document.getElementById('graficoPastel') && datos.length > 0) {
         new Chart(document.getElementById('graficoPastel').getContext('2d'), {
             type: 'doughnut',
             data: {
-                labels: ['Mano de obra', 'Material', 'Sin clasificar'],
-                datasets: [{
-                    data: [datosGrafico.mano_de_obra || 0, datosGrafico.material || 0, datosGrafico.sin_clasificar || 0],
-                    backgroundColor: ['#198754', '#fd7e14', '#6c757d'],
-                    borderWidth: 2,
-                    borderColor: '#fff'
-                }]
+                labels: labels,
+                datasets: [{ data: datos, backgroundColor: colores, borderWidth: 1, borderColor: '#fff' }]
             },
             options: {
                 responsive: true,
                 plugins: {
-                    legend: { position: 'bottom' },
+                    legend: { position: 'right', labels: { font: { size: 10 }, boxWidth: 12 } },
                     tooltip: {
                         callbacks: {
                             label: function(ctx) {
@@ -263,40 +244,44 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    if (document.getElementById('graficoMensual')) {
-        var meses = Object.keys(datosMensual);
-        var moData = meses.map(function(m) { return datosMensual[m].mano_de_obra || 0; });
-        var matData = meses.map(function(m) { return datosMensual[m].material || 0; });
-        var scData = meses.map(function(m) { return datosMensual[m].sin_clasificar || 0; });
+    // Grafico mensual - top 5 categorias + resto agrupado
+    var meses = Object.keys(datosMensual);
+    if (document.getElementById('graficoMensual') && meses.length > 0) {
+        // Calcular total por categoria para seleccionar top
+        var totalPorCat = {};
+        for (var m = 0; m < meses.length; m++) {
+            for (var cat in datosMensual[meses[m]]) {
+                totalPorCat[cat] = (totalPorCat[cat] || 0) + datosMensual[meses[m]][cat];
+            }
+        }
+        var catOrdenadas = Object.keys(totalPorCat).sort(function(a, b) { return totalPorCat[b] - totalPorCat[a]; });
+        var topCats = catOrdenadas.slice(0, 6);
+
+        var datasets = [];
+        for (var i = 0; i < topCats.length; i++) {
+            var cat = topCats[i];
+            var catData = meses.map(function(m) { return datosMensual[m][cat] || 0; });
+            datasets.push({
+                label: categorias[cat] ? categorias[cat].label : cat,
+                data: catData,
+                backgroundColor: categorias[cat] ? categorias[cat].color : '#999'
+            });
+        }
 
         new Chart(document.getElementById('graficoMensual').getContext('2d'), {
             type: 'bar',
-            data: {
-                labels: meses,
-                datasets: [
-                    { label: 'Mano de obra', data: moData, backgroundColor: '#198754' },
-                    { label: 'Material', data: matData, backgroundColor: '#fd7e14' },
-                    { label: 'Sin clasificar', data: scData, backgroundColor: '#6c757d' }
-                ]
-            },
+            data: { labels: meses, datasets: datasets },
             options: {
                 responsive: true,
                 scales: {
                     x: { stacked: true },
-                    y: {
-                        stacked: true,
-                        ticks: {
-                            callback: function(val) { return val.toLocaleString('es-ES') + ' EUR'; }
-                        }
-                    }
+                    y: { stacked: true, ticks: { callback: function(v) { return v.toLocaleString('es-ES') + ' EUR'; } } }
                 },
                 plugins: {
-                    legend: { position: 'bottom' },
+                    legend: { position: 'bottom', labels: { font: { size: 10 }, boxWidth: 12 } },
                     tooltip: {
                         callbacks: {
-                            label: function(ctx) {
-                                return ctx.dataset.label + ': ' + ctx.raw.toLocaleString('es-ES', {minimumFractionDigits: 2}) + ' EUR';
-                            }
+                            label: function(ctx) { return ctx.dataset.label + ': ' + ctx.raw.toLocaleString('es-ES', {minimumFractionDigits: 2}) + ' EUR'; }
                         }
                     }
                 }

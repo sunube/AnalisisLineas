@@ -8,11 +8,34 @@
             <column name="tipo" order="20" numcolumns="4">
                 <widget type="select" fieldname="tipo" required="true">
                     <values title="Mano de obra">mano_de_obra</values>
-                    <values title="Material">material</values>
+                    <values title="Telefonia">telefonia</values>
+                    <values title="Licencias Microsoft">licencia_microsoft</values>
+                    <values title="Hardware">hardware</values>
+                    <values title="Servidores / Cloud">servidor_cloud</values>
+                    <values title="Cables / Red">cable_red</values>
+                    <values title="Internet / Conectividad">internet</values>
+                    <values title="Componentes">componente</values>
+                    <values title="Perifericos">periferico</values>
+                    <values title="Monitores">monitor</values>
+                    <values title="Impresoras / Consumibles">impresora</values>
+                    <values title="Correo / Email">correo</values>
+                    <values title="Firma digital">firma_digital</values>
+                    <values title="Centralita / VoIP">centralita</values>
+                    <values title="Dominios">dominio</values>
+                    <values title="Hosting">hosting</values>
+                    <values title="Antivirus">antivirus</values>
+                    <values title="Camaras / CCTV">camara</values>
+                    <values title="Software / Licencias">software</values>
+                    <values title="Consultoria / Asesoria">consultoria</values>
+                    <values title="Diseno Web / Marketing">diseno_web</values>
+                    <values title="Sin clasificar">sin_clasificar</values>
                 </widget>
             </column>
-            <column name="palabra-clave" order="30" numcolumns="8">
+            <column name="palabra-clave" order="30" numcolumns="6">
                 <widget type="text" fieldname="palabra_clave" required="true"/>
+            </column>
+            <column name="orden" order="35" numcolumns="2">
+                <widget type="number" fieldname="orden"/>
             </column>
             <column name="activo" order="40" numcolumns="4">
                 <widget type="checkbox" fieldname="activo"/>

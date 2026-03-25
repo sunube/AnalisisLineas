@@ -18,6 +18,11 @@
         <default>TRUE</default>
     </column>
     <column>
+        <name>orden</name>
+        <type>integer</type>
+        <default>10</default>
+    </column>
+    <column>
         <name>creacion</name>
         <type>timestamp</type>
     </column>

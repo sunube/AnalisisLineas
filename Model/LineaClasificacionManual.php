@@ -43,6 +43,12 @@ class LineaClasificacionManual extends ModelClass
     public static function getAllIndexed(): array
     {
         $db = new \FacturaScripts\Core\Base\DataBase();
+
+        // Verificar que la tabla existe antes de consultar
+        if (!$db->tableExists('lineas_clasificacion_manual')) {
+            return [];
+        }
+
         $rows = $db->select("SELECT idlinea, tipo FROM lineas_clasificacion_manual");
         $result = [];
         if ($rows) {

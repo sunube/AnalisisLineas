@@ -95,6 +95,13 @@ class AnalisisLineas extends Controller
 
         $db = new DataBase();
 
+        // Crear tabla si no existe
+        if (!$db->tableExists('lineas_clasificacion_manual')) {
+            $db->exec("CREATE TABLE IF NOT EXISTS lineas_clasificacion_manual ("
+                . "id SERIAL, idlinea INTEGER NOT NULL, tipo VARCHAR(50) NOT NULL,"
+                . "fecha TIMESTAMP, PRIMARY KEY (id), UNIQUE (idlinea))");
+        }
+
         // Buscar si ya existe un override para esta linea
         $existing = $db->select("SELECT id FROM lineas_clasificacion_manual WHERE idlinea = " . (int) $idlinea);
         if ($existing && count($existing) > 0) {

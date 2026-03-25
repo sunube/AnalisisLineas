@@ -68,24 +68,44 @@
                         <input type="text" name="busqueda" class="form-control form-control-sm" placeholder="Buscar en descripcion..." value="{{ fsc.busqueda }}">
                     </div>
                 </div>
+
+                {# CATEGORIAS VISIBLES #}
+                <div class="mt-2 pt-2 border-top">
+                    <a class="text-decoration-none text-muted small" data-bs-toggle="collapse" href="#categoriasVisibles" role="button" aria-expanded="false" id="toggleCategoriasBtn">
+                        <i class="fa-solid fa-eye"></i> <strong>Categorias visibles</strong> <span id="catVisibleCount" class="badge bg-secondary">0</span> <i class="fa-solid fa-chevron-down" style="font-size: 0.6rem;"></i>
+                    </a>
+                    <div class="collapse mt-2" id="categoriasVisibles">
+                        <div class="d-flex flex-wrap gap-2 align-items-center">
+                            <button type="button" class="btn btn-outline-primary btn-sm py-0 px-1" style="font-size: 0.7rem;" onclick="toggleAllCategorias(true)">Todas</button>
+                            <button type="button" class="btn btn-outline-secondary btn-sm py-0 px-1" style="font-size: 0.7rem;" onclick="toggleAllCategorias(false)">Ninguna</button>
+                            <span class="mx-1 text-muted">|</span>
+                            {% for key, cat in fsc.categorias %}
+                            <label class="form-check-label d-inline-flex align-items-center gap-1 small" style="cursor: pointer;">
+                                <input type="checkbox" class="form-check-input cat-visibility-check" data-cat="{{ key }}" checked style="width: 14px; height: 14px;">
+                                <span class="badge" style="background-color: {{ cat.color }}; font-size: 0.65rem;"><i class="{{ cat.icon }}"></i> {{ cat.label }}</span>
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </form>
 
     {# RESUMEN: TOTAL + CATEGORIAS CON DATOS #}
-    <div class="row mb-3">
-        <div class="col-md-3">
+    <div class="row mb-3" id="resumenCards">
+        <div class="col-md-3" id="card-total">
             <div class="card shadow-sm" style="border-left: 4px solid #0d6efd;">
                 <div class="card-body text-center py-2">
                     <h6 class="text-muted mb-1">Total Facturado</h6>
-                    <h4 class="text-primary mb-0">{{ fsc.resumen.total_general|number_format(2, ',', '.') }} &euro;</h4>
-                    <small class="text-muted">{{ fsc.resumen.count_total }} lineas</small>
+                    <h4 class="text-primary mb-0" id="totalFiltrado">{{ fsc.resumen.total_general|number_format(2, ',', '.') }} &euro;</h4>
+                    <small class="text-muted" id="countFiltrado">{{ fsc.resumen.count_total }} lineas</small>
                 </div>
             </div>
         </div>
         {% for key, datos in fsc.resumen.por_categoria %}
-        {% if datos.count > 0 and key != 'sin_clasificar' %}
-        <div class="col-md-3 mt-2">
+        {% if datos.count > 0 %}
+        <div class="col-md-3 mt-2 cat-card" data-cat="{{ key }}">
             <div class="card shadow-sm" style="border-left: 4px solid {{ fsc.categorias[key].color }};">
                 <div class="card-body text-center py-2">
                     <h6 class="text-muted mb-1"><i class="{{ fsc.categorias[key].icon }}"></i> {{ fsc.categorias[key].label }}</h6>
@@ -96,17 +116,6 @@
         </div>
         {% endif %}
         {% endfor %}
-        {% if fsc.resumen.por_categoria.sin_clasificar is defined and fsc.resumen.por_categoria.sin_clasificar.count > 0 %}
-        <div class="col-md-3 mt-2">
-            <div class="card shadow-sm" style="border-left: 4px solid #6c757d;">
-                <div class="card-body text-center py-2">
-                    <h6 class="text-muted mb-1"><i class="fa-solid fa-question"></i> Sin clasificar</h6>
-                    <h5 class="mb-0 text-secondary">{{ fsc.resumen.por_categoria.sin_clasificar.total|number_format(2, ',', '.') }} &euro;</h5>
-                    <small class="text-muted">{{ fsc.resumen.por_categoria.sin_clasificar.count }} lineas ({{ fsc.resumen.por_categoria.sin_clasificar.pct }}%)</small>
-                </div>
-            </div>
-        </div>
-        {% endif %}
     </div>
 
     {# GRAFICOS #}
@@ -155,7 +164,7 @@
                     </thead>
                     <tbody>
                         {% for linea in fsc.resultados %}
-                        <tr>
+                        <tr class="cat-row" data-cat="{{ linea.clasificacion }}">
                             <td><a href="EditFacturaCliente?code={{ linea.idfactura }}">{{ linea.codigo }}</a></td>
                             <td>{{ linea.fecha }}</td>
                             <td>{{ linea.nombrecliente|slice(0, 30) }}</td>
@@ -254,50 +263,143 @@ document.addEventListener('DOMContentLoaded', function() {
     var categorias = {{ fsc.categorias|json_encode|raw }};
     var datosGrafico = {{ fsc.datosGrafico|json_encode|raw }};
     var datosMensual = {{ fsc.datosGraficoMensual|json_encode|raw }};
+    var COOKIE_NAME = 'analisis_cat_hidden';
+    var COOKIE_DAYS = 180;
+    var chartPastel = null;
+    var chartMensual = null;
 
-    // Grafico de pastel
-    var labels = [], datos = [], colores = [];
-    for (var key in datosGrafico) {
-        if (datosGrafico[key] > 0 && categorias[key]) {
-            labels.push(categorias[key].label);
-            datos.push(datosGrafico[key]);
-            colores.push(categorias[key].color);
+    // ======= COOKIE UTILS =======
+    function getCookie(name) {
+        var match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+        return match ? decodeURIComponent(match[2]) : '';
+    }
+    function setCookie(name, value, days) {
+        var d = new Date();
+        d.setTime(d.getTime() + days * 86400000);
+        document.cookie = name + '=' + encodeURIComponent(value) + ';expires=' + d.toUTCString() + ';path=/;SameSite=Lax';
+    }
+
+    // ======= LOAD HIDDEN CATS FROM COOKIE =======
+    function getHiddenCats() {
+        var raw = getCookie(COOKIE_NAME);
+        if (!raw) return [];
+        try { return JSON.parse(raw); } catch(e) { return []; }
+    }
+    function saveHiddenCats(arr) {
+        setCookie(COOKIE_NAME, JSON.stringify(arr), COOKIE_DAYS);
+    }
+
+    // ======= INIT CHECKBOXES FROM COOKIE =======
+    var hiddenCats = getHiddenCats();
+    var checks = document.querySelectorAll('.cat-visibility-check');
+    checks.forEach(function(chk) {
+        var cat = chk.getAttribute('data-cat');
+        if (hiddenCats.indexOf(cat) !== -1) {
+            chk.checked = false;
+        }
+        chk.addEventListener('change', function() {
+            onVisibilityChange();
+        });
+    });
+
+    // Auto-open the collapse if there are hidden categories
+    if (hiddenCats.length > 0) {
+        var collapseEl = document.getElementById('categoriasVisibles');
+        if (collapseEl) {
+            collapseEl.classList.add('show');
         }
     }
 
-    if (document.getElementById('graficoPastel') && datos.length > 0) {
-        new Chart(document.getElementById('graficoPastel').getContext('2d'), {
-            type: 'doughnut',
-            data: {
-                labels: labels,
-                datasets: [{ data: datos, backgroundColor: colores, borderWidth: 1, borderColor: '#fff' }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: { position: 'right', labels: { font: { size: 10 }, boxWidth: 12 } },
-                    tooltip: {
-                        callbacks: {
-                            label: function(ctx) {
-                                var total = ctx.dataset.data.reduce(function(a, b) { return a + b; }, 0);
-                                var pct = total > 0 ? ((ctx.raw / total) * 100).toFixed(1) : 0;
-                                return ctx.label + ': ' + ctx.raw.toLocaleString('es-ES', {minimumFractionDigits: 2}) + ' EUR (' + pct + '%)';
+    // ======= TOGGLE ALL =======
+    window.toggleAllCategorias = function(checked) {
+        checks.forEach(function(chk) { chk.checked = checked; });
+        onVisibilityChange();
+    };
+
+    // ======= ON VISIBILITY CHANGE =======
+    function onVisibilityChange() {
+        var hidden = [];
+        checks.forEach(function(chk) {
+            if (!chk.checked) hidden.push(chk.getAttribute('data-cat'));
+        });
+        saveHiddenCats(hidden);
+        applyVisibility(hidden);
+        updateCharts(hidden);
+        updateCounter(hidden);
+    }
+
+    function updateCounter(hidden) {
+        var total = checks.length;
+        var visible = total - hidden.length;
+        var badge = document.getElementById('catVisibleCount');
+        if (badge) badge.textContent = visible + '/' + total;
+    }
+
+    // ======= APPLY VISIBILITY TO CARDS + TABLE =======
+    function applyVisibility(hidden) {
+        // Cards
+        document.querySelectorAll('.cat-card').forEach(function(el) {
+            var cat = el.getAttribute('data-cat');
+            el.style.display = (hidden.indexOf(cat) !== -1) ? 'none' : '';
+        });
+        // Table rows
+        document.querySelectorAll('.cat-row').forEach(function(el) {
+            var cat = el.getAttribute('data-cat');
+            el.style.display = (hidden.indexOf(cat) !== -1) ? 'none' : '';
+        });
+    }
+
+    // ======= CHARTS =======
+    function buildPastelChart(hidden) {
+        var labels = [], datos = [], colores = [], keys = [];
+        for (var key in datosGrafico) {
+            if (datosGrafico[key] > 0 && categorias[key] && hidden.indexOf(key) === -1) {
+                labels.push(categorias[key].label);
+                datos.push(datosGrafico[key]);
+                colores.push(categorias[key].color);
+                keys.push(key);
+            }
+        }
+        if (chartPastel) { chartPastel.destroy(); chartPastel = null; }
+        var canvas = document.getElementById('graficoPastel');
+        if (canvas && datos.length > 0) {
+            chartPastel = new Chart(canvas.getContext('2d'), {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{ data: datos, backgroundColor: colores, borderWidth: 1, borderColor: '#fff' }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'right', labels: { font: { size: 10 }, boxWidth: 12 } },
+                        tooltip: {
+                            callbacks: {
+                                label: function(ctx) {
+                                    var total = ctx.dataset.data.reduce(function(a, b) { return a + b; }, 0);
+                                    var pct = total > 0 ? ((ctx.raw / total) * 100).toFixed(1) : 0;
+                                    return ctx.label + ': ' + ctx.raw.toLocaleString('es-ES', {minimumFractionDigits: 2}) + ' EUR (' + pct + '%)';
+                                }
                             }
                         }
                     }
                 }
-            }
-        });
+            });
+        }
     }
 
-    // Grafico mensual - top 5 categorias + resto agrupado
-    var meses = Object.keys(datosMensual);
-    if (document.getElementById('graficoMensual') && meses.length > 0) {
-        // Calcular total por categoria para seleccionar top
+    function buildMensualChart(hidden) {
+        var meses = Object.keys(datosMensual);
+        if (chartMensual) { chartMensual.destroy(); chartMensual = null; }
+        var canvas = document.getElementById('graficoMensual');
+        if (!canvas || meses.length === 0) return;
+
         var totalPorCat = {};
         for (var m = 0; m < meses.length; m++) {
             for (var cat in datosMensual[meses[m]]) {
-                totalPorCat[cat] = (totalPorCat[cat] || 0) + datosMensual[meses[m]][cat];
+                if (hidden.indexOf(cat) === -1) {
+                    totalPorCat[cat] = (totalPorCat[cat] || 0) + datosMensual[meses[m]][cat];
+                }
             }
         }
         var catOrdenadas = Object.keys(totalPorCat).sort(function(a, b) { return totalPorCat[b] - totalPorCat[a]; });
@@ -305,16 +407,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
         var datasets = [];
         for (var i = 0; i < topCats.length; i++) {
-            var cat = topCats[i];
-            var catData = meses.map(function(m) { return datosMensual[m][cat] || 0; });
+            var c = topCats[i];
+            var catData = meses.map(function(m) { return datosMensual[m][c] || 0; });
             datasets.push({
-                label: categorias[cat] ? categorias[cat].label : cat,
+                label: categorias[c] ? categorias[c].label : c,
                 data: catData,
-                backgroundColor: categorias[cat] ? categorias[cat].color : '#999'
+                backgroundColor: categorias[c] ? categorias[c].color : '#999'
             });
         }
 
-        new Chart(document.getElementById('graficoMensual').getContext('2d'), {
+        chartMensual = new Chart(canvas.getContext('2d'), {
             type: 'bar',
             data: { labels: meses, datasets: datasets },
             options: {
@@ -334,6 +436,16 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+
+    function updateCharts(hidden) {
+        buildPastelChart(hidden);
+        buildMensualChart(hidden);
+    }
+
+    // ======= INITIAL RENDER =======
+    applyVisibility(hiddenCats);
+    updateCharts(hiddenCats);
+    updateCounter(hiddenCats);
 });
 </script>
 {% endblock %}

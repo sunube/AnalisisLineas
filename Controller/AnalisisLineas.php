@@ -216,7 +216,7 @@ class AnalisisLineas extends Controller
 
     private function clasificarLinea(array $linea, array $palabrasManoObra, array $palabrasMaterial): string
     {
-        $descripcion = mb_strtoupper($linea['descripcion'] ?? '', 'UTF-8');
+        $descripcion = $this->normalizarTexto($linea['descripcion'] ?? '');
         $pvpunitario = (float) ($linea['pvpunitario'] ?? 0);
         $cantidad = (float) ($linea['cantidad'] ?? 0);
 
@@ -227,14 +227,14 @@ class AnalisisLineas extends Controller
 
         // 1. Comprobar palabras clave de mano de obra en la descripcion
         foreach ($palabrasManoObra as $palabra) {
-            if (mb_strpos($descripcion, mb_strtoupper($palabra, 'UTF-8')) !== false) {
+            if (mb_strpos($descripcion, $this->normalizarTexto($palabra)) !== false) {
                 return 'mano_de_obra';
             }
         }
 
         // 2. Comprobar palabras clave de material
         foreach ($palabrasMaterial as $palabra) {
-            if (mb_strpos($descripcion, mb_strtoupper($palabra, 'UTF-8')) !== false) {
+            if (mb_strpos($descripcion, $this->normalizarTexto($palabra)) !== false) {
                 return 'material';
             }
         }
@@ -246,6 +246,17 @@ class AnalisisLineas extends Controller
 
         // 4. No se puede clasificar automaticamente
         return 'sin_clasificar';
+    }
+
+    /**
+     * Normaliza texto: mayusculas y sin tildes/acentos para comparar
+     */
+    private function normalizarTexto(string $texto): string
+    {
+        $texto = mb_strtoupper($texto, 'UTF-8');
+        $acentos = ['Á', 'É', 'Í', 'Ó', 'Ú', 'Ñ', 'Ü', 'À', 'È', 'Ì', 'Ò', 'Ù'];
+        $sinAcentos = ['A', 'E', 'I', 'O', 'U', 'N', 'U', 'A', 'E', 'I', 'O', 'U'];
+        return str_replace($acentos, $sinAcentos, $texto);
     }
 
     private function getPalabrasClave(string $tipo): array

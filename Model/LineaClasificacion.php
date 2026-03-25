@@ -90,6 +90,7 @@ class LineaClasificacion extends ModelClass
         }
 
         $defaults = [
+            // Mano de obra - palabras clave
             ['tipo' => 'mano_de_obra', 'palabra_clave' => 'INSTALACION'],
             ['tipo' => 'mano_de_obra', 'palabra_clave' => 'CONFIGURACION'],
             ['tipo' => 'mano_de_obra', 'palabra_clave' => 'PUESTA EN MARCHA'],
@@ -97,13 +98,20 @@ class LineaClasificacion extends ModelClass
             ['tipo' => 'mano_de_obra', 'palabra_clave' => 'MONTAJE'],
             ['tipo' => 'mano_de_obra', 'palabra_clave' => 'PROGRAMACION'],
             ['tipo' => 'mano_de_obra', 'palabra_clave' => 'DESPLAZAMIENTO'],
-            ['tipo' => 'mano_de_obra', 'palabra_clave' => 'HORA'],
             ['tipo' => 'mano_de_obra', 'palabra_clave' => 'SERVICIO TECNICO'],
             ['tipo' => 'mano_de_obra', 'palabra_clave' => 'FORMACION'],
             ['tipo' => 'mano_de_obra', 'palabra_clave' => 'MANTENIMIENTO'],
             ['tipo' => 'mano_de_obra', 'palabra_clave' => 'REPARACION'],
             ['tipo' => 'mano_de_obra', 'palabra_clave' => 'ASISTENCIA'],
             ['tipo' => 'mano_de_obra', 'palabra_clave' => 'SOPORTE'],
+            ['tipo' => 'mano_de_obra', 'palabra_clave' => 'FORMATEO'],
+            ['tipo' => 'mano_de_obra', 'palabra_clave' => 'RECUPERACION'],
+            ['tipo' => 'mano_de_obra', 'palabra_clave' => 'PREPARAR'],
+            ['tipo' => 'mano_de_obra', 'palabra_clave' => 'PROBLEMA CON'],
+            ['tipo' => 'mano_de_obra', 'palabra_clave' => 'CALIBRACION'],
+            ['tipo' => 'mano_de_obra', 'palabra_clave' => 'DIAGNOSTICO'],
+            ['tipo' => 'mano_de_obra', 'palabra_clave' => 'REVISION'],
+            ['tipo' => 'mano_de_obra', 'palabra_clave' => 'INTERVENCION'],
         ];
 
         foreach ($defaults as $data) {

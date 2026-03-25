@@ -200,7 +200,8 @@ class AnalisisLineas extends Controller
             'licencia_microsoft', 'antivirus', 'dominio', 'hosting',
             'camara', 'centralita', 'telefonia', 'servidor_cloud', 'correo',
             'firma_digital', 'internet', 'impresora', 'software', 'consultoria',
-            'diseno_web', 'monitor', 'periferico', 'cable_red', 'componente', 'hardware',
+            'diseno_web', 'monitor', 'periferico', 'cable_red',
+            'hardware', 'componente',
             'mano_de_obra',
         ];
 

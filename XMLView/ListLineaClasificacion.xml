@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<view>
+    <columns>
+        <group name="data">
+            <column name="id" display="none" order="10">
+                <widget type="text" fieldname="id"/>
+            </column>
+            <column name="tipo" order="20">
+                <widget type="select" fieldname="tipo" required="true" translate="true">
+                    <values title="mano_de_obra">mano_de_obra</values>
+                    <values title="material">material</values>
+                </widget>
+            </column>
+            <column name="palabra-clave" order="30" numcolumns="6">
+                <widget type="text" fieldname="palabra_clave" required="true"/>
+            </column>
+            <column name="activo" order="40">
+                <widget type="checkbox" fieldname="activo"/>
+            </column>
+            <column name="creacion" order="50">
+                <widget type="datetime" fieldname="creacion"/>
+            </column>
+        </group>
+    </columns>
+</view>

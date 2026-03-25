@@ -1,0 +1,123 @@
+<?php
+
+namespace FacturaScripts\Plugins\AnalisisLineas\Model;
+
+use FacturaScripts\Core\Model\Base\ModelClass;
+use FacturaScripts\Core\Model\Base\ModelTrait;
+
+class LineaClasificacion extends ModelClass
+{
+    use ModelTrait;
+
+    /** @var int */
+    public $id;
+
+    /** @var string mano_de_obra|material */
+    public $tipo;
+
+    /** @var string */
+    public $palabra_clave;
+
+    /** @var bool */
+    public $activo;
+
+    /** @var string */
+    public $creacion;
+
+    public function clear(): void
+    {
+        parent::clear();
+        $this->tipo = 'mano_de_obra';
+        $this->activo = true;
+        $this->creacion = date('Y-m-d H:i:s');
+    }
+
+    public static function primaryColumn(): string
+    {
+        return 'id';
+    }
+
+    public static function tableName(): string
+    {
+        return 'lineas_clasificacion';
+    }
+
+    public function test(): bool
+    {
+        $this->palabra_clave = self::toolBox()::utils()::noHtml($this->palabra_clave);
+        if (empty($this->palabra_clave)) {
+            self::toolBox()::i18nLog()->warning('La palabra clave no puede estar vacía.');
+            return false;
+        }
+        return parent::test();
+    }
+
+    /**
+     * Devuelve todas las palabras clave activas de un tipo
+     */
+    public static function getByTipo(string $tipo): array
+    {
+        $model = new static();
+        $where = [
+            new \FacturaScripts\Core\Base\DataBase\DataBaseWhere('tipo', $tipo),
+            new \FacturaScripts\Core\Base\DataBase\DataBaseWhere('activo', true),
+        ];
+        return $model->all($where, [], 0, 0);
+    }
+
+    /**
+     * Devuelve todas las palabras clave activas
+     */
+    public static function getAllActive(): array
+    {
+        $model = new static();
+        $where = [
+            new \FacturaScripts\Core\Base\DataBase\DataBaseWhere('activo', true),
+        ];
+        return $model->all($where, [], 0, 0);
+    }
+
+    /**
+     * Inserta las palabras clave por defecto si la tabla está vacía
+     */
+    public static function seedDefaults(): void
+    {
+        $model = new static();
+        if ($model->count() > 0) {
+            return;
+        }
+
+        $defaults = [
+            // Mano de obra
+            ['tipo' => 'mano_de_obra', 'palabra_clave' => 'INSTALACION'],
+            ['tipo' => 'mano_de_obra', 'palabra_clave' => 'INSTALACIÓN'],
+            ['tipo' => 'mano_de_obra', 'palabra_clave' => 'CONFIGURACION'],
+            ['tipo' => 'mano_de_obra', 'palabra_clave' => 'CONFIGURACIÓN'],
+            ['tipo' => 'mano_de_obra', 'palabra_clave' => 'PUESTA EN MARCHA'],
+            ['tipo' => 'mano_de_obra', 'palabra_clave' => 'MANO DE OBRA'],
+            ['tipo' => 'mano_de_obra', 'palabra_clave' => 'MONTAJE'],
+            ['tipo' => 'mano_de_obra', 'palabra_clave' => 'PROGRAMACION'],
+            ['tipo' => 'mano_de_obra', 'palabra_clave' => 'PROGRAMACIÓN'],
+            ['tipo' => 'mano_de_obra', 'palabra_clave' => 'DESPLAZAMIENTO'],
+            ['tipo' => 'mano_de_obra', 'palabra_clave' => 'HORA'],
+            ['tipo' => 'mano_de_obra', 'palabra_clave' => 'SERVICIO TECNICO'],
+            ['tipo' => 'mano_de_obra', 'palabra_clave' => 'SERVICIO TÉCNICO'],
+            ['tipo' => 'mano_de_obra', 'palabra_clave' => 'FORMACION'],
+            ['tipo' => 'mano_de_obra', 'palabra_clave' => 'FORMACIÓN'],
+            ['tipo' => 'mano_de_obra', 'palabra_clave' => 'MANTENIMIENTO'],
+            ['tipo' => 'mano_de_obra', 'palabra_clave' => 'REPARACION'],
+            ['tipo' => 'mano_de_obra', 'palabra_clave' => 'REPARACIÓN'],
+            ['tipo' => 'mano_de_obra', 'palabra_clave' => 'ASISTENCIA'],
+            ['tipo' => 'mano_de_obra', 'palabra_clave' => 'SOPORTE'],
+        ];
+
+        foreach ($defaults as $data) {
+            $item = new static();
+            $item->tipo = $data['tipo'];
+            $item->palabra_clave = $data['palabra_clave'];
+            $item->activo = true;
+            $item->creacion = date('Y-m-d H:i:s');
+            $item->save();
+        }
+    }
+}

@@ -193,13 +193,15 @@ class AnalisisLineas extends Controller
     {
         $descripcion = $this->normalizarTexto($linea['descripcion'] ?? '');
 
-        // Recorrer categorias por orden (el array ya viene ordenado por el campo orden)
-        // Primero obtener el orden de prioridad de las categorias
+        // Primero evaluar categorias especificas de producto/servicio
+        // y DESPUES mano_de_obra (que tiene keywords genericas como INSTALACION, CONFIGURACION
+        // que pueden aparecer en descripciones de productos)
         $prioridad = [
-            'mano_de_obra', 'licencia_microsoft', 'antivirus', 'dominio', 'hosting',
+            'licencia_microsoft', 'antivirus', 'dominio', 'hosting',
             'camara', 'centralita', 'telefonia', 'servidor_cloud', 'correo',
             'firma_digital', 'internet', 'impresora', 'software', 'consultoria',
             'diseno_web', 'monitor', 'periferico', 'cable_red', 'componente', 'hardware',
+            'mano_de_obra',
         ];
 
         foreach ($prioridad as $tipo) {

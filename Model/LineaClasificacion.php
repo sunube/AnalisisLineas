@@ -149,6 +149,8 @@ class LineaClasificacion extends ModelClass
             ['tipo' => 'mano_de_obra', 'palabra_clave' => 'RESTAURACION', 'orden' => 1],
             ['tipo' => 'mano_de_obra', 'palabra_clave' => 'CAMBIO DE PLACA', 'orden' => 1],
             ['tipo' => 'mano_de_obra', 'palabra_clave' => 'PRECONFIGURAC', 'orden' => 1],
+            ['tipo' => 'mano_de_obra', 'palabra_clave' => 'PRESTACION DE SERVICIOS', 'orden' => 1],
+            ['tipo' => 'mano_de_obra', 'palabra_clave' => 'CONTRATO DE SERVICIOS', 'orden' => 1],
 
             // === LICENCIAS MICROSOFT (orden 2) ===
             ['tipo' => 'licencia_microsoft', 'palabra_clave' => 'MICROSOFT 365', 'orden' => 2],

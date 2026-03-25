@@ -7,7 +7,6 @@
     <column>
         <name>tipo</name>
         <type>character varying(50)</type>
-        <default>mano_de_obra</default>
     </column>
     <column>
         <name>palabra_clave</name>
@@ -16,7 +15,7 @@
     <column>
         <name>activo</name>
         <type>boolean</type>
-        <default>true</default>
+        <default>TRUE</default>
     </column>
     <column>
         <name>creacion</name>

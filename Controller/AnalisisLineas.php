@@ -218,28 +218,33 @@ class AnalisisLineas extends Controller
     {
         $descripcion = mb_strtoupper($linea['descripcion'] ?? '', 'UTF-8');
         $pvpunitario = (float) ($linea['pvpunitario'] ?? 0);
+        $cantidad = (float) ($linea['cantidad'] ?? 0);
 
+        // Si la linea tiene importe 0 y cantidad 0, es una linea de texto/separador
+        if ($pvpunitario == 0 && $cantidad == 0) {
+            return 'sin_clasificar';
+        }
+
+        // 1. Comprobar palabras clave de mano de obra en la descripcion
         foreach ($palabrasManoObra as $palabra) {
             if (mb_strpos($descripcion, mb_strtoupper($palabra, 'UTF-8')) !== false) {
                 return 'mano_de_obra';
             }
         }
 
+        // 2. Comprobar palabras clave de material
         foreach ($palabrasMaterial as $palabra) {
             if (mb_strpos($descripcion, mb_strtoupper($palabra, 'UTF-8')) !== false) {
                 return 'material';
             }
         }
 
-        $preciosHora = [15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80];
-        if (in_array((int) $pvpunitario, $preciosHora) && $pvpunitario == (int) $pvpunitario) {
-            return 'mano_de_obra';
-        }
-
+        // 3. Si tiene referencia de producto, es material
         if (!empty($linea['referencia'])) {
             return 'material';
         }
 
+        // 4. No se puede clasificar automaticamente
         return 'sin_clasificar';
     }
 

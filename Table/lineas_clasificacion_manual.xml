@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<table>
+    <column>
+        <name>id</name>
+        <type>serial</type>
+    </column>
+    <column>
+        <name>idlinea</name>
+        <type>integer</type>
+    </column>
+    <column>
+        <name>tipo</name>
+        <type>character varying(50)</type>
+    </column>
+    <column>
+        <name>fecha</name>
+        <type>timestamp</type>
+    </column>
+    <constraint>
+        <name>lineas_clas_manual_pkey</name>
+        <type>PRIMARY KEY (id)</type>
+    </constraint>
+    <constraint>
+        <name>lineas_clas_manual_idlinea</name>
+        <type>UNIQUE (idlinea)</type>
+    </constraint>
+</table>

@@ -6,6 +6,7 @@ use FacturaScripts\Core\Base\Controller;
 use FacturaScripts\Core\Base\DataBase;
 use FacturaScripts\Core\Tools;
 use FacturaScripts\Plugins\AnalisisLineas\Model\LineaClasificacion;
+use FacturaScripts\Plugins\AnalisisLineas\Model\LineaClasificacionManual;
 
 class AnalisisLineas extends Controller
 {
@@ -46,6 +47,11 @@ class AnalisisLineas extends Controller
         LineaClasificacion::seedDefaults();
         $this->categorias = LineaClasificacion::getCategorias();
 
+        // Procesar cambio manual de clasificacion via POST
+        if ($this->request->getMethod() === 'POST' && $this->request->request->get('action') === 'cambiar_clasificacion') {
+            $this->cambiarClasificacionManual();
+        }
+
         $this->cargarClientes();
         $this->cargarSeries();
 
@@ -70,10 +76,48 @@ class AnalisisLineas extends Controller
         return 'AnalisisLineas.html.twig';
     }
 
+    /**
+     * Procesa el cambio manual de clasificacion
+     */
+    private function cambiarClasificacionManual(): void
+    {
+        $idlinea = (int) $this->request->request->get('idlinea', 0);
+        $tipo = $this->request->request->get('tipo', '');
+
+        if ($idlinea <= 0 || empty($tipo)) {
+            return;
+        }
+
+        // Verificar que el tipo es valido
+        if (!isset($this->categorias[$tipo])) {
+            return;
+        }
+
+        $db = new DataBase();
+
+        // Buscar si ya existe un override para esta linea
+        $existing = $db->select("SELECT id FROM lineas_clasificacion_manual WHERE idlinea = " . (int) $idlinea);
+        if ($existing && count($existing) > 0) {
+            // Actualizar
+            $db->exec("UPDATE lineas_clasificacion_manual SET tipo = " . $db->var2str($tipo)
+                . ", fecha = " . $db->var2str(date('Y-m-d H:i:s'))
+                . " WHERE idlinea = " . (int) $idlinea);
+        } else {
+            // Insertar
+            $db->exec("INSERT INTO lineas_clasificacion_manual (idlinea, tipo, fecha) VALUES ("
+                . (int) $idlinea . ", " . $db->var2str($tipo) . ", " . $db->var2str(date('Y-m-d H:i:s')) . ")");
+        }
+
+        Tools::log()->notice('Clasificacion manual actualizada correctamente.');
+    }
+
     private function ejecutarAnalisis(): void
     {
         $db = new DataBase();
         $keywordsAgrupadas = LineaClasificacion::getAllGrouped();
+
+        // Cargar overrides manuales
+        $manuales = LineaClasificacionManual::getAllIndexed();
 
         $sql = $this->buildSQL($db);
         $todasLineas = $db->select($sql);
@@ -97,7 +141,22 @@ class AnalisisLineas extends Controller
                 continue;
             }
 
-            $tipo = $this->clasificarLinea($linea, $keywordsAgrupadas);
+            // Omitir lineas con precio unitario = 0
+            if ((float) ($linea['pvpunitario'] ?? 0) == 0) {
+                continue;
+            }
+
+            $idlinea = (int) ($linea['idlinea'] ?? 0);
+
+            // Comprobar si hay clasificacion manual
+            if (isset($manuales[$idlinea])) {
+                $tipo = $manuales[$idlinea];
+                $linea['manual'] = true;
+            } else {
+                $tipo = $this->clasificarLinea($linea, $keywordsAgrupadas);
+                $linea['manual'] = false;
+            }
+
             $linea['clasificacion'] = $tipo;
             $pvptotal = (float) ($linea['pvptotal'] ?? 0);
 
@@ -227,6 +286,8 @@ class AnalisisLineas extends Controller
     private function normalizarTexto(string $texto): string
     {
         $texto = mb_strtoupper($texto, 'UTF-8');
+        // Reemplazar saltos de linea por espacio para que keywords funcionen en descripciones multilinea
+        $texto = str_replace(["\r\n", "\r", "\n"], ' ', $texto);
         $acentos = ['Á', 'É', 'Í', 'Ó', 'Ú', 'Ñ', 'Ü', 'À', 'È', 'Ì', 'Ò', 'Ù'];
         $sinAcentos = ['A', 'E', 'I', 'O', 'U', 'N', 'U', 'A', 'E', 'I', 'O', 'U'];
         return str_replace($acentos, $sinAcentos, $texto);
@@ -278,6 +339,7 @@ class AnalisisLineas extends Controller
         $db = new DataBase();
         $keywordsAgrupadas = LineaClasificacion::getAllGrouped();
         $categorias = LineaClasificacion::getCategorias();
+        $manuales = LineaClasificacionManual::getAllIndexed();
 
         $sql = $this->buildSQL($db);
         $lineas = $db->select($sql);
@@ -290,7 +352,18 @@ class AnalisisLineas extends Controller
             if ($this->esSeparador($linea)) {
                 continue;
             }
-            $tipo = $this->clasificarLinea($linea, $keywordsAgrupadas);
+
+            // Omitir lineas con precio unitario = 0
+            if ((float) ($linea['pvpunitario'] ?? 0) == 0) {
+                continue;
+            }
+
+            $idlinea = (int) ($linea['idlinea'] ?? 0);
+            if (isset($manuales[$idlinea])) {
+                $tipo = $manuales[$idlinea];
+            } else {
+                $tipo = $this->clasificarLinea($linea, $keywordsAgrupadas);
+            }
             $linea['clasificacion'] = $tipo;
 
             if (!empty($this->clasificacion) && $tipo !== $this->clasificacion) {

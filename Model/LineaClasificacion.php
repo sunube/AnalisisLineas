@@ -538,5 +538,31 @@ class LineaClasificacion extends ModelClass
 
         // Eliminar keywords del tipo 'material' (ya no existe en v2.0)
         $db->exec("DELETE FROM lineas_clasificacion WHERE tipo = 'material'");
+
+        // Verificacion de seguridad: keywords criticas que DEBEN existir
+        $criticas = [
+            ['tipo' => 'licencia_microsoft', 'palabra_clave' => 'MICROSOFT 365'],
+            ['tipo' => 'licencia_microsoft', 'palabra_clave' => 'OFFICE 365'],
+            ['tipo' => 'licencia_microsoft', 'palabra_clave' => 'MICROSOFT E3'],
+            ['tipo' => 'licencia_microsoft', 'palabra_clave' => 'MICROSOFT TEAMS'],
+        ];
+        foreach ($criticas as $c) {
+            $check = $db->select("SELECT id FROM lineas_clasificacion WHERE tipo = "
+                . $db->var2str($c['tipo']) . " AND UPPER(palabra_clave) = "
+                . $db->var2str(mb_strtoupper($c['palabra_clave'])) . " AND activo = TRUE");
+            if (!$check || count($check) === 0) {
+                // Forzar insercion si no existe o esta desactivada
+                $db->exec("DELETE FROM lineas_clasificacion WHERE tipo = "
+                    . $db->var2str($c['tipo']) . " AND UPPER(palabra_clave) = "
+                    . $db->var2str(mb_strtoupper($c['palabra_clave'])));
+                $item = new static();
+                $item->tipo = $c['tipo'];
+                $item->palabra_clave = $c['palabra_clave'];
+                $item->activo = true;
+                $item->orden = 2;
+                $item->creacion = date('Y-m-d H:i:s');
+                $item->save();
+            }
+        }
     }
 }

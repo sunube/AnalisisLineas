@@ -165,7 +165,7 @@
                             <td class="text-end"><strong>{{ linea.pvptotal|number_format(2, ',', '.') }}</strong></td>
                             <td class="text-center">
                                 {% set cat = fsc.categorias[linea.clasificacion] is defined ? fsc.categorias[linea.clasificacion] : {label: linea.clasificacion, color: '#6c757d', icon: 'fa-solid fa-tag'} %}
-                                <span class="badge" style="background-color: {{ cat.color }}; font-size: 0.7rem;">
+                                <span class="badge" style="background-color: {{ cat.color }}; font-size: 0.7rem;" title="Keyword: {{ linea.keyword_match is defined ? linea.keyword_match : '' }}">
                                     <i class="{{ cat.icon }}"></i> {{ cat.label }}
                                 </span>
                                 {% if linea.manual is defined and linea.manual %}

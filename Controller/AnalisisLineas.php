@@ -159,9 +159,12 @@ class AnalisisLineas extends Controller
             if (isset($manuales[$idlinea])) {
                 $tipo = $manuales[$idlinea];
                 $linea['manual'] = true;
+                $linea['keyword_match'] = 'Manual';
             } else {
-                $tipo = $this->clasificarLinea($linea, $keywordsAgrupadas);
+                $resultado = $this->clasificarLinea($linea, $keywordsAgrupadas);
+                $tipo = $resultado[0];
                 $linea['manual'] = false;
+                $linea['keyword_match'] = $resultado[1];
             }
 
             $linea['clasificacion'] = $tipo;
@@ -254,8 +257,9 @@ class AnalisisLineas extends Controller
 
     /**
      * Clasifica una linea recorriendo las categorias por orden de prioridad
+     * Devuelve [tipo, keyword_match] para poder mostrar que keyword hizo match
      */
-    private function clasificarLinea(array $linea, array $keywordsAgrupadas): string
+    private function clasificarLinea(array $linea, array $keywordsAgrupadas): array
     {
         $descripcion = $this->normalizarTexto($linea['descripcion'] ?? '');
 
@@ -276,28 +280,30 @@ class AnalisisLineas extends Controller
                 continue;
             }
             foreach ($keywordsAgrupadas[$tipo] as $palabra) {
-                if (mb_strpos($descripcion, $this->normalizarTexto($palabra)) !== false) {
-                    return $tipo;
+                $palabraNorm = $this->normalizarTexto($palabra);
+                if (mb_strpos($descripcion, $palabraNorm) !== false) {
+                    return [$tipo, $palabra];
                 }
             }
         }
 
         // Si tiene referencia de producto pero no encaja en ninguna categoria
         if (!empty($linea['referencia'])) {
-            return 'hardware';
+            return ['hardware', 'REF:' . $linea['referencia']];
         }
 
-        return 'sin_clasificar';
+        return ['sin_clasificar', ''];
     }
 
     private function normalizarTexto(string $texto): string
     {
         $texto = mb_strtoupper($texto, 'UTF-8');
-        // Reemplazar saltos de linea por espacio para que keywords funcionen en descripciones multilinea
-        $texto = str_replace(["\r\n", "\r", "\n"], ' ', $texto);
+        // Reemplazar TODOS los tipos de espacios en blanco y caracteres invisibles
+        // incluyendo non-breaking spaces (\xC2\xA0), tabuladores, saltos de linea, etc.
+        $texto = preg_replace('/[\s\x{00A0}\x{200B}\x{FEFF}]+/u', ' ', $texto);
         $acentos = ['Á', 'É', 'Í', 'Ó', 'Ú', 'Ñ', 'Ü', 'À', 'È', 'Ì', 'Ò', 'Ù'];
         $sinAcentos = ['A', 'E', 'I', 'O', 'U', 'N', 'U', 'A', 'E', 'I', 'O', 'U'];
-        return str_replace($acentos, $sinAcentos, $texto);
+        return str_replace($acentos, $sinAcentos, trim($texto));
     }
 
     private function buildSQL(DataBase $db): string
@@ -368,8 +374,11 @@ class AnalisisLineas extends Controller
             $idlinea = (int) ($linea['idlinea'] ?? 0);
             if (isset($manuales[$idlinea])) {
                 $tipo = $manuales[$idlinea];
+                $linea['keyword_match'] = 'Manual';
             } else {
-                $tipo = $this->clasificarLinea($linea, $keywordsAgrupadas);
+                $resultado = $this->clasificarLinea($linea, $keywordsAgrupadas);
+                $tipo = $resultado[0];
+                $linea['keyword_match'] = $resultado[1];
             }
             $linea['clasificacion'] = $tipo;
 
@@ -389,7 +398,7 @@ class AnalisisLineas extends Controller
         fputcsv($output, [
             'Factura', 'Fecha', 'Cod. Cliente', 'Cliente', 'Serie',
             'Descripcion', 'Referencia', 'Cantidad', 'Precio Ud.',
-            'Dto %', 'IVA %', 'Total Neto', 'Clasificacion'
+            'Dto %', 'IVA %', 'Total Neto', 'Clasificacion', 'Keyword'
         ], ';');
 
         foreach ($lineasFiltradas as $linea) {
@@ -402,6 +411,7 @@ class AnalisisLineas extends Controller
                 $linea['referencia'] ?? '', $linea['cantidad'] ?? 0,
                 $linea['pvpunitario'] ?? 0, $linea['dtopor'] ?? 0,
                 $linea['iva'] ?? 0, $linea['pvptotal'] ?? 0, $tipoLabel,
+                $linea['keyword_match'] ?? '',
             ], ';');
         }
 

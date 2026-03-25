@@ -123,11 +123,6 @@ class LineaClasificacion extends ModelClass
 
     public static function seedDefaults(): void
     {
-        $model = new static();
-        if ($model->count() > 0) {
-            return;
-        }
-
         $defaults = [
             // === MANO DE OBRA (orden 1 - maxima prioridad) ===
             ['tipo' => 'mano_de_obra', 'palabra_clave' => 'INSTALACION', 'orden' => 1],
@@ -301,7 +296,21 @@ class LineaClasificacion extends ModelClass
             ['tipo' => 'hardware', 'palabra_clave' => 'APPLE IPAD', 'orden' => 21],
         ];
 
+        // Cargar keywords existentes para no duplicar
+        $db = new \FacturaScripts\Core\Base\DataBase();
+        $existentes = [];
+        $rows = $db->select("SELECT tipo, palabra_clave FROM lineas_clasificacion");
+        if ($rows) {
+            foreach ($rows as $row) {
+                $existentes[$row['tipo'] . '||' . mb_strtoupper($row['palabra_clave'])] = true;
+            }
+        }
+
         foreach ($defaults as $data) {
+            $clave = $data['tipo'] . '||' . mb_strtoupper($data['palabra_clave']);
+            if (isset($existentes[$clave])) {
+                continue;
+            }
             $item = new static();
             $item->tipo = $data['tipo'];
             $item->palabra_clave = $data['palabra_clave'];
@@ -310,5 +319,8 @@ class LineaClasificacion extends ModelClass
             $item->creacion = date('Y-m-d H:i:s');
             $item->save();
         }
+
+        // Eliminar keywords del tipo 'material' (ya no existe en v2.0)
+        $db->exec("DELETE FROM lineas_clasificacion WHERE tipo = 'material'");
     }
 }

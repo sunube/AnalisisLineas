@@ -179,6 +179,15 @@ class LineaClasificacion extends ModelClass
             ['tipo' => 'mano_de_obra', 'palabra_clave' => 'FALLO EN', 'orden' => 1],
             ['tipo' => 'mano_de_obra', 'palabra_clave' => 'PRUEBAS CON', 'orden' => 1],
             ['tipo' => 'mano_de_obra', 'palabra_clave' => 'MATENIMIENTO', 'orden' => 1],
+            ['tipo' => 'mano_de_obra', 'palabra_clave' => 'CAMBIAR', 'orden' => 1],
+            ['tipo' => 'mano_de_obra', 'palabra_clave' => 'CONFIGURAR', 'orden' => 1],
+            ['tipo' => 'mano_de_obra', 'palabra_clave' => 'ACTUALIZAR', 'orden' => 1],
+            ['tipo' => 'mano_de_obra', 'palabra_clave' => 'INTERVENCION', 'orden' => 1],
+            ['tipo' => 'mano_de_obra', 'palabra_clave' => 'PROBLEMA PC', 'orden' => 1],
+            ['tipo' => 'mano_de_obra', 'palabra_clave' => 'PROBLEMAS PC', 'orden' => 1],
+            ['tipo' => 'mano_de_obra', 'palabra_clave' => 'VER PROBLEMA', 'orden' => 1],
+            ['tipo' => 'mano_de_obra', 'palabra_clave' => 'VER CABLEADO', 'orden' => 1],
+            ['tipo' => 'mano_de_obra', 'palabra_clave' => 'CAMBIO PANTALLA', 'orden' => 1],
 
             // === LICENCIAS MICROSOFT (orden 2) ===
             ['tipo' => 'licencia_microsoft', 'palabra_clave' => 'MICROSOFT 365', 'orden' => 2],
@@ -203,6 +212,11 @@ class LineaClasificacion extends ModelClass
 
             // === DOMINIOS (orden 4) ===
             ['tipo' => 'dominio', 'palabra_clave' => 'DOMINIO', 'orden' => 4],
+            ['tipo' => 'dominio', 'palabra_clave' => '.ES', 'orden' => 4],
+            ['tipo' => 'dominio', 'palabra_clave' => '.NET', 'orden' => 4],
+            ['tipo' => 'dominio', 'palabra_clave' => '.COM', 'orden' => 4],
+            ['tipo' => 'dominio', 'palabra_clave' => '.EU', 'orden' => 4],
+            ['tipo' => 'dominio', 'palabra_clave' => '.INFO', 'orden' => 4],
 
             // === HOSTING (orden 5) ===
             ['tipo' => 'hosting', 'palabra_clave' => 'HOSTING', 'orden' => 5],
@@ -222,6 +236,7 @@ class LineaClasificacion extends ModelClass
             ['tipo' => 'camara', 'palabra_clave' => 'WIZCOLOR', 'orden' => 6],
             ['tipo' => 'camara', 'palabra_clave' => 'CAJA DE CONEXIONES CAMARA', 'orden' => 6],
             ['tipo' => 'camara', 'palabra_clave' => 'VIDEOVIGILANCIA', 'orden' => 6],
+            ['tipo' => 'camara', 'palabra_clave' => 'DOMO IP', 'orden' => 6],
 
             // === CENTRALITA / VOIP (orden 7) ===
             ['tipo' => 'centralita', 'palabra_clave' => 'CENTRALITA', 'orden' => 7],
@@ -248,6 +263,9 @@ class LineaClasificacion extends ModelClass
             ['tipo' => 'telefonia', 'palabra_clave' => 'GIGAS', 'orden' => 8],
             ['tipo' => 'telefonia', 'palabra_clave' => 'TARIFA 10GB', 'orden' => 8],
             ['tipo' => 'telefonia', 'palabra_clave' => 'PORTABILIDAD', 'orden' => 8],
+            ['tipo' => 'telefonia', 'palabra_clave' => 'EXCEO CONSUMO', 'orden' => 8],
+            ['tipo' => 'telefonia', 'palabra_clave' => 'EXCESO COSNUMO', 'orden' => 8],
+            ['tipo' => 'telefonia', 'palabra_clave' => 'EXCSO CONSUMO', 'orden' => 8],
 
             // === SERVIDOR CLOUD / BACKUP (orden 9) ===
             ['tipo' => 'servidor_cloud', 'palabra_clave' => 'SERVIDOR CLOUD', 'orden' => 9],
@@ -329,6 +347,8 @@ class LineaClasificacion extends ModelClass
             // === MONITORES (orden 17) ===
             ['tipo' => 'monitor', 'palabra_clave' => 'MONITOR', 'orden' => 17],
             ['tipo' => 'monitor', 'palabra_clave' => 'SOPORTE BRAZO', 'orden' => 17],
+            ['tipo' => 'monitor', 'palabra_clave' => 'PANTALLA PARA PC', 'orden' => 17],
+            ['tipo' => 'monitor', 'palabra_clave' => 'PANTALLA 22', 'orden' => 17],
 
             // === PERIFERICOS (orden 18) ===
             ['tipo' => 'periferico', 'palabra_clave' => 'TECLADO', 'orden' => 18],
@@ -350,6 +370,14 @@ class LineaClasificacion extends ModelClass
             ['tipo' => 'periferico', 'palabra_clave' => 'BEATS', 'orden' => 18],
             ['tipo' => 'periferico', 'palabra_clave' => 'APPLE PENCIL', 'orden' => 18],
             ['tipo' => 'periferico', 'palabra_clave' => 'LECTOR CODIGO', 'orden' => 18],
+            ['tipo' => 'periferico', 'palabra_clave' => 'MICRO SD', 'orden' => 18],
+            ['tipo' => 'periferico', 'palabra_clave' => 'FUNDA', 'orden' => 18],
+            ['tipo' => 'periferico', 'palabra_clave' => 'CRISTAL TEMPLADO', 'orden' => 18],
+            ['tipo' => 'periferico', 'palabra_clave' => 'REGLETA', 'orden' => 18],
+            ['tipo' => 'periferico', 'palabra_clave' => 'LECTOR', 'orden' => 18],
+            ['tipo' => 'periferico', 'palabra_clave' => 'EXTENSOR USB', 'orden' => 18],
+            ['tipo' => 'periferico', 'palabra_clave' => 'ALFOMBRILLA', 'orden' => 18],
+            ['tipo' => 'periferico', 'palabra_clave' => 'BATERIA', 'orden' => 18],
 
             // === CABLES / RED (orden 19) ===
             ['tipo' => 'cable_red', 'palabra_clave' => 'CABLE USB', 'orden' => 19],
@@ -381,6 +409,28 @@ class LineaClasificacion extends ModelClass
             ['tipo' => 'cable_red', 'palabra_clave' => 'TRANSCEPTOR', 'orden' => 19],
             ['tipo' => 'cable_red', 'palabra_clave' => 'MIKROTIK', 'orden' => 19],
             ['tipo' => 'cable_red', 'palabra_clave' => 'POE', 'orden' => 19],
+            ['tipo' => 'cable_red', 'palabra_clave' => 'CABLE UTP', 'orden' => 19],
+            ['tipo' => 'cable_red', 'palabra_clave' => 'CABLE CAT', 'orden' => 19],
+            ['tipo' => 'cable_red', 'palabra_clave' => 'PUNTO DE ACCESO', 'orden' => 19],
+            ['tipo' => 'cable_red', 'palabra_clave' => 'UAP', 'orden' => 19],
+            ['tipo' => 'cable_red', 'palabra_clave' => 'EAP', 'orden' => 19],
+            ['tipo' => 'cable_red', 'palabra_clave' => 'MODULO SFP', 'orden' => 19],
+            ['tipo' => 'cable_red', 'palabra_clave' => 'BOLSA CONECTORES', 'orden' => 19],
+            ['tipo' => 'cable_red', 'palabra_clave' => 'BANDEJA', 'orden' => 19],
+            ['tipo' => 'cable_red', 'palabra_clave' => 'CAJA ESTANCA', 'orden' => 19],
+            ['tipo' => 'cable_red', 'palabra_clave' => 'METROS DE CABLE', 'orden' => 19],
+            ['tipo' => 'cable_red', 'palabra_clave' => 'CABBLE', 'orden' => 19],
+            ['tipo' => 'cable_red', 'palabra_clave' => 'CALBE', 'orden' => 19],
+            ['tipo' => 'cable_red', 'palabra_clave' => 'CABLE 3M', 'orden' => 19],
+            ['tipo' => 'cable_red', 'palabra_clave' => 'CABLE 5M', 'orden' => 19],
+            ['tipo' => 'cable_red', 'palabra_clave' => 'CABLE 10M', 'orden' => 19],
+            ['tipo' => 'cable_red', 'palabra_clave' => 'CABLE 15M', 'orden' => 19],
+            ['tipo' => 'cable_red', 'palabra_clave' => 'CABLE 20M', 'orden' => 19],
+            ['tipo' => 'cable_red', 'palabra_clave' => 'RACK ', 'orden' => 19],
+            ['tipo' => 'cable_red', 'palabra_clave' => 'PATCH PANEL', 'orden' => 19],
+            ['tipo' => 'cable_red', 'palabra_clave' => 'CANALETA', 'orden' => 19],
+            ['tipo' => 'cable_red', 'palabra_clave' => 'TUBO CORRUGADO', 'orden' => 19],
+            ['tipo' => 'cable_red', 'palabra_clave' => 'KEYSTONE', 'orden' => 19],
 
             // === COMPONENTES INTERNOS (orden 20) ===
             ['tipo' => 'componente', 'palabra_clave' => 'MEMORIA RAM', 'orden' => 20],
@@ -397,6 +447,19 @@ class LineaClasificacion extends ModelClass
             ['tipo' => 'componente', 'palabra_clave' => 'DISIPADOR', 'orden' => 20],
             ['tipo' => 'componente', 'palabra_clave' => 'NVIDIA', 'orden' => 20],
             ['tipo' => 'componente', 'palabra_clave' => 'VENTILADOR CPU', 'orden' => 20],
+            ['tipo' => 'componente', 'palabra_clave' => 'CAJA ATX', 'orden' => 20],
+            ['tipo' => 'componente', 'palabra_clave' => 'CARCASA', 'orden' => 20],
+            ['tipo' => 'componente', 'palabra_clave' => 'PASTA TERMICA', 'orden' => 20],
+            ['tipo' => 'componente', 'palabra_clave' => 'TARJETA WIFI', 'orden' => 20],
+            ['tipo' => 'componente', 'palabra_clave' => 'USB WIFI', 'orden' => 20],
+            ['tipo' => 'componente', 'palabra_clave' => 'MEMORIA KINGSTON', 'orden' => 20],
+            ['tipo' => 'componente', 'palabra_clave' => 'PILA BIOS', 'orden' => 20],
+            ['tipo' => 'componente', 'palabra_clave' => 'PILA CR', 'orden' => 20],
+            ['tipo' => 'componente', 'palabra_clave' => 'FUNTE', 'orden' => 20],
+            ['tipo' => 'componente', 'palabra_clave' => 'F.A.', 'orden' => 20],
+            ['tipo' => 'componente', 'palabra_clave' => 'BACKPLATE', 'orden' => 20],
+            ['tipo' => 'componente', 'palabra_clave' => 'HDD ', 'orden' => 20],
+            ['tipo' => 'componente', 'palabra_clave' => 'VENTILADOR', 'orden' => 20],
 
             // === HARDWARE (orden 21 - mas generico, al final) ===
             ['tipo' => 'hardware', 'palabra_clave' => 'PORTATIL', 'orden' => 21],
@@ -428,6 +491,25 @@ class LineaClasificacion extends ModelClass
             ['tipo' => 'hardware', 'palabra_clave' => 'HP ELITEBOOK', 'orden' => 21],
             ['tipo' => 'hardware', 'palabra_clave' => 'HP PROBOOK', 'orden' => 21],
             ['tipo' => 'hardware', 'palabra_clave' => 'CHROMEBOOK', 'orden' => 21],
+            ['tipo' => 'hardware', 'palabra_clave' => 'ACER', 'orden' => 21],
+            ['tipo' => 'hardware', 'palabra_clave' => 'SAMSUNG', 'orden' => 21],
+            ['tipo' => 'hardware', 'palabra_clave' => 'ZTE', 'orden' => 21],
+            ['tipo' => 'hardware', 'palabra_clave' => 'TELEVISOR', 'orden' => 21],
+            ['tipo' => 'hardware', 'palabra_clave' => 'TV LG', 'orden' => 21],
+            ['tipo' => 'hardware', 'palabra_clave' => 'GOOGLE CHROMECAST', 'orden' => 21],
+            ['tipo' => 'hardware', 'palabra_clave' => 'MSI ', 'orden' => 21],
+            ['tipo' => 'hardware', 'palabra_clave' => 'HDD SYNOLOGY', 'orden' => 21],
+            ['tipo' => 'hardware', 'palabra_clave' => 'SYNOLOGY', 'orden' => 21],
+            ['tipo' => 'hardware', 'palabra_clave' => 'SOBREMESA', 'orden' => 21],
+            ['tipo' => 'hardware', 'palabra_clave' => 'EQUIPO NUEVO', 'orden' => 21],
+            ['tipo' => 'hardware', 'palabra_clave' => 'EQUIPO PC', 'orden' => 21],
+            ['tipo' => 'hardware', 'palabra_clave' => 'MINI PC', 'orden' => 21],
+            ['tipo' => 'hardware', 'palabra_clave' => 'PC GAMING', 'orden' => 21],
+            ['tipo' => 'hardware', 'palabra_clave' => 'SERVIDOR HP', 'orden' => 21],
+            ['tipo' => 'hardware', 'palabra_clave' => 'SERVIDOR DELL', 'orden' => 21],
+            ['tipo' => 'hardware', 'palabra_clave' => 'TPV ', 'orden' => 21],
+            ['tipo' => 'hardware', 'palabra_clave' => 'CAJON PORTAMONEDAS', 'orden' => 21],
+            ['tipo' => 'hardware', 'palabra_clave' => 'VISOR CLIENTE', 'orden' => 21],
         ];
 
         // Cargar keywords existentes para no duplicar

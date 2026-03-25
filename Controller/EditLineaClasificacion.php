@@ -15,7 +15,7 @@ class EditLineaClasificacion extends EditController
     {
         $data = parent::getPageData();
         $data['title'] = 'Palabra Clave';
-        $data['menu'] = 'informes';
+        $data['menu'] = 'reports';
         $data['icon'] = 'fas fa-tag';
         $data['showonmenu'] = false;
         return $data;

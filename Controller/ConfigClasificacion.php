@@ -10,7 +10,7 @@ class ConfigClasificacion extends ListController
     {
         $data = parent::getPageData();
         $data['title'] = 'Configurar Clasificación';
-        $data['menu'] = 'informes';
+        $data['menu'] = 'reports';
         $data['submenu'] = 'Análisis Líneas';
         $data['icon'] = 'fas fa-cogs';
         $data['showonmenu'] = false;

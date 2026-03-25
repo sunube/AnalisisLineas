@@ -58,7 +58,7 @@ class AnalisisLineas extends Controller
     {
         $data = parent::getPageData();
         $data['title'] = 'Análisis de Líneas';
-        $data['menu'] = 'informes';
+        $data['menu'] = 'reports';
         $data['submenu'] = 'Análisis Líneas';
         $data['icon'] = 'fas fa-chart-pie';
         $data['showonmenu'] = true;

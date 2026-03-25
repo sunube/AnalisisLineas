@@ -2,9 +2,7 @@
 
 namespace FacturaScripts\Plugins\AnalisisLineas;
 
-use FacturaScripts\Core\Base\InitClass;
-
-class Init extends InitClass
+class Init
 {
     public function init(): void
     {
@@ -14,5 +12,10 @@ class Init extends InitClass
     public function update(): void
     {
         // Se ejecuta cada vez que se instala o actualiza el plugin
+    }
+
+    public function uninstall(): void
+    {
+        // Se ejecuta cuando se desinstala el plugin
     }
 }

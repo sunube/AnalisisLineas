@@ -4,6 +4,8 @@ namespace FacturaScripts\Plugins\AnalisisLineas\Model;
 
 use FacturaScripts\Core\Model\Base\ModelClass;
 use FacturaScripts\Core\Model\Base\ModelTrait;
+use FacturaScripts\Core\Tools;
+use FacturaScripts\Core\Base\DataBase\DataBaseWhere;
 
 class LineaClasificacion extends ModelClass
 {
@@ -44,9 +46,9 @@ class LineaClasificacion extends ModelClass
 
     public function test(): bool
     {
-        $this->palabra_clave = self::toolBox()::utils()::noHtml($this->palabra_clave);
+        $this->palabra_clave = Tools::noHtml($this->palabra_clave ?? '');
         if (empty($this->palabra_clave)) {
-            self::toolBox()::i18nLog()->warning('La palabra clave no puede estar vacía.');
+            Tools::log()->warning('La palabra clave no puede estar vacia.');
             return false;
         }
         return parent::test();
@@ -59,8 +61,8 @@ class LineaClasificacion extends ModelClass
     {
         $model = new static();
         $where = [
-            new \FacturaScripts\Core\Base\DataBase\DataBaseWhere('tipo', $tipo),
-            new \FacturaScripts\Core\Base\DataBase\DataBaseWhere('activo', true),
+            new DataBaseWhere('tipo', $tipo),
+            new DataBaseWhere('activo', true),
         ];
         return $model->all($where, [], 0, 0);
     }
@@ -72,13 +74,13 @@ class LineaClasificacion extends ModelClass
     {
         $model = new static();
         $where = [
-            new \FacturaScripts\Core\Base\DataBase\DataBaseWhere('activo', true),
+            new DataBaseWhere('activo', true),
         ];
         return $model->all($where, [], 0, 0);
     }
 
     /**
-     * Inserta las palabras clave por defecto si la tabla está vacía
+     * Inserta las palabras clave por defecto si la tabla esta vacia
      */
     public static function seedDefaults(): void
     {
@@ -88,25 +90,18 @@ class LineaClasificacion extends ModelClass
         }
 
         $defaults = [
-            // Mano de obra
             ['tipo' => 'mano_de_obra', 'palabra_clave' => 'INSTALACION'],
-            ['tipo' => 'mano_de_obra', 'palabra_clave' => 'INSTALACIÓN'],
             ['tipo' => 'mano_de_obra', 'palabra_clave' => 'CONFIGURACION'],
-            ['tipo' => 'mano_de_obra', 'palabra_clave' => 'CONFIGURACIÓN'],
             ['tipo' => 'mano_de_obra', 'palabra_clave' => 'PUESTA EN MARCHA'],
             ['tipo' => 'mano_de_obra', 'palabra_clave' => 'MANO DE OBRA'],
             ['tipo' => 'mano_de_obra', 'palabra_clave' => 'MONTAJE'],
             ['tipo' => 'mano_de_obra', 'palabra_clave' => 'PROGRAMACION'],
-            ['tipo' => 'mano_de_obra', 'palabra_clave' => 'PROGRAMACIÓN'],
             ['tipo' => 'mano_de_obra', 'palabra_clave' => 'DESPLAZAMIENTO'],
             ['tipo' => 'mano_de_obra', 'palabra_clave' => 'HORA'],
             ['tipo' => 'mano_de_obra', 'palabra_clave' => 'SERVICIO TECNICO'],
-            ['tipo' => 'mano_de_obra', 'palabra_clave' => 'SERVICIO TÉCNICO'],
             ['tipo' => 'mano_de_obra', 'palabra_clave' => 'FORMACION'],
-            ['tipo' => 'mano_de_obra', 'palabra_clave' => 'FORMACIÓN'],
             ['tipo' => 'mano_de_obra', 'palabra_clave' => 'MANTENIMIENTO'],
             ['tipo' => 'mano_de_obra', 'palabra_clave' => 'REPARACION'],
-            ['tipo' => 'mano_de_obra', 'palabra_clave' => 'REPARACIÓN'],
             ['tipo' => 'mano_de_obra', 'palabra_clave' => 'ASISTENCIA'],
             ['tipo' => 'mano_de_obra', 'palabra_clave' => 'SOPORTE'],
         ];

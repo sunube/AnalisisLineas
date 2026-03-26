@@ -90,6 +90,28 @@
                             {% endfor %}
                         </div>
                     </div>
+                {# SERIES VISIBLES #}
+                <div class="mt-2 pt-2 border-top">
+                    <a class="text-decoration-none text-muted small" data-bs-toggle="collapse" href="#seriesVisibles" role="button" aria-expanded="{{ fsc.seriesOcultas|length > 0 ? 'true' : 'false' }}">
+                        <i class="fa-solid fa-layer-group"></i> <strong>Series visibles</strong>
+                        <span class="badge bg-secondary">{{ fsc.series|length - fsc.seriesOcultas|length }}/{{ fsc.series|length }}</span>
+                        <i class="fa-solid fa-chevron-down" style="font-size: 0.6rem;"></i>
+                    </a>
+                    <div class="collapse {{ fsc.seriesOcultas|length > 0 ? 'show' : '' }} mt-2" id="seriesVisibles">
+                        <div class="d-flex flex-wrap gap-2 align-items-center">
+                            <button type="button" class="btn btn-outline-primary btn-sm py-0 px-1" style="font-size: 0.7rem;" onclick="toggleAllSeries(true)">Todas</button>
+                            <button type="button" class="btn btn-outline-secondary btn-sm py-0 px-1" style="font-size: 0.7rem;" onclick="toggleAllSeries(false)">Ninguna</button>
+                            <span class="mx-1 text-muted">|</span>
+                            {% for serie in fsc.series %}
+                            {% set isSerieHidden = serie.codserie in fsc.seriesOcultas %}
+                            <label class="form-check-label d-inline-flex align-items-center gap-1 small" style="cursor: pointer;">
+                                <input type="checkbox" class="form-check-input serie-visibility-check" data-serie="{{ serie.codserie }}" {{ isSerieHidden ? '' : 'checked' }} style="width: 14px; height: 14px;">
+                                <span class="badge bg-dark" style="font-size: 0.65rem; {{ isSerieHidden ? 'opacity: 0.4;' : '' }}">{{ serie.codserie }} - {{ serie.descripcion }}</span>
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
                 </div>
             </div>
         </div>
@@ -262,7 +284,6 @@ function abrirCambioCategoria(idlinea, tipoActual) {
 }
 
 // ======= COOKIE UTILS =======
-var COOKIE_NAME = 'analisis_cat_hidden';
 var COOKIE_DAYS = 180;
 
 function getCookie(name) {
@@ -275,29 +296,52 @@ function setCookie(name, value, days) {
     document.cookie = name + '=' + encodeURIComponent(value) + ';expires=' + d.toUTCString() + ';path=/;SameSite=Lax';
 }
 
-// ======= CATEGORY VISIBILITY =======
-function saveAndReload() {
+function reloadPage0() {
+    var url = new URL(window.location.href);
+    url.searchParams.set('pagina', '0');
+    window.location.href = url.toString();
+}
+
+// ======= CATEGORIAS =======
+function saveCategorias() {
     var hidden = [];
     document.querySelectorAll('.cat-visibility-check').forEach(function(chk) {
         if (!chk.checked) hidden.push(chk.getAttribute('data-cat'));
     });
-    setCookie(COOKIE_NAME, JSON.stringify(hidden), COOKIE_DAYS);
-    // Volver a pagina 0 al cambiar filtros de categoria
-    var url = new URL(window.location.href);
-    url.searchParams.set('pagina', '0');
-    window.location.href = url.toString();
+    setCookie('analisis_cat_hidden', hidden.join(','), COOKIE_DAYS);
+    reloadPage0();
 }
 
 function toggleAllCategorias(checked) {
     document.querySelectorAll('.cat-visibility-check').forEach(function(chk) {
         chk.checked = checked;
     });
-    saveAndReload();
+    saveCategorias();
 }
 
-// Event listeners en checkboxes
 document.querySelectorAll('.cat-visibility-check').forEach(function(chk) {
-    chk.addEventListener('change', saveAndReload);
+    chk.addEventListener('change', saveCategorias);
+});
+
+// ======= SERIES =======
+function saveSeries() {
+    var hidden = [];
+    document.querySelectorAll('.serie-visibility-check').forEach(function(chk) {
+        if (!chk.checked) hidden.push(chk.getAttribute('data-serie'));
+    });
+    setCookie('analisis_series_hidden', hidden.join(','), COOKIE_DAYS);
+    reloadPage0();
+}
+
+function toggleAllSeries(checked) {
+    document.querySelectorAll('.serie-visibility-check').forEach(function(chk) {
+        chk.checked = checked;
+    });
+    saveSeries();
+}
+
+document.querySelectorAll('.serie-visibility-check').forEach(function(chk) {
+    chk.addEventListener('change', saveSeries);
 });
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>

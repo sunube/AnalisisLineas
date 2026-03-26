@@ -26,6 +26,7 @@ class AnalisisLineas extends Controller
     public $pagina = 0;
     public $totalPaginas = 0;
     public $categoriasOcultas = [];
+    public $seriesOcultas = [];
 
     private $porPagina = 50;
 
@@ -64,8 +65,9 @@ class AnalisisLineas extends Controller
         $this->busqueda = $this->request->query->get('busqueda', '');
         $this->pagina = (int) $this->request->query->get('pagina', 0);
 
-        // Leer categorias ocultas desde cookie
+        // Leer categorias y series ocultas desde cookies
         $this->categoriasOcultas = $this->leerCategoriasOcultas();
+        $this->seriesOcultas = $this->leerSeriesOcultas();
 
         if ($this->request->query->get('export') === 'csv') {
             $this->exportarCSV();
@@ -346,6 +348,26 @@ class AnalisisLineas extends Controller
         }));
     }
 
+    /**
+     * Lee las series ocultas desde la cookie del navegador
+     */
+    private function leerSeriesOcultas(): array
+    {
+        $raw = $_COOKIE['analisis_series_hidden'] ?? '';
+        if (empty($raw)) {
+            return [];
+        }
+        $decoded = json_decode(urldecode($raw), true);
+        if (!is_array($decoded)) {
+            return [];
+        }
+        // Validar que cada elemento es un codserie existente
+        $validas = array_column($this->series, 'codserie');
+        return array_values(array_filter($decoded, function ($s) use ($validas) {
+            return in_array($s, $validas);
+        }));
+    }
+
     private function normalizarTexto(string $texto): string
     {
         $texto = mb_strtoupper($texto, 'UTF-8');
@@ -375,6 +397,12 @@ class AnalisisLineas extends Controller
         }
         if (!empty($this->busqueda)) {
             $sql .= " AND LOWER(l.descripcion) LIKE LOWER(" . $db->var2str('%' . $this->busqueda . '%') . ")";
+        }
+
+        // Excluir series ocultas
+        if (!empty($this->seriesOcultas)) {
+            $seriesEsc = array_map(function ($s) use ($db) { return $db->var2str($s); }, $this->seriesOcultas);
+            $sql .= " AND f.codserie NOT IN (" . implode(',', $seriesEsc) . ")";
         }
 
         $sql .= " ORDER BY f.fecha DESC, f.codigo";

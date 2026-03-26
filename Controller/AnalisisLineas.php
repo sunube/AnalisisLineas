@@ -25,6 +25,7 @@ class AnalisisLineas extends Controller
     public $busqueda = '';
     public $pagina = 0;
     public $totalPaginas = 0;
+    public $categoriasOcultas = [];
 
     private $porPagina = 50;
 
@@ -62,6 +63,9 @@ class AnalisisLineas extends Controller
         $this->clasificacion = $this->request->query->get('clasificacion', '');
         $this->busqueda = $this->request->query->get('busqueda', '');
         $this->pagina = (int) $this->request->query->get('pagina', 0);
+
+        // Leer categorias ocultas desde cookie
+        $this->categoriasOcultas = $this->leerCategoriasOcultas();
 
         if ($this->request->query->get('export') === 'csv') {
             $this->exportarCSV();
@@ -196,30 +200,57 @@ class AnalisisLineas extends Controller
             }));
         }
 
-        // Resumen
-        $totalGeneral = array_sum($totalesPorCategoria);
-        $countTotal = array_sum($countPorCategoria);
+        // Filtrar por categorias ocultas (cookie)
+        $ocultas = $this->categoriasOcultas;
+        if (!empty($ocultas)) {
+            $lineasClasificadas = array_values(array_filter($lineasClasificadas, function ($l) use ($ocultas) {
+                return !in_array($l['clasificacion'], $ocultas);
+            }));
+        }
+
+        // Resumen: solo categorias visibles
+        $totalVisible = 0;
+        $countVisible = 0;
+        foreach ($this->categorias as $key => $cat) {
+            if (!in_array($key, $ocultas)) {
+                $totalVisible += $totalesPorCategoria[$key];
+                $countVisible += $countPorCategoria[$key];
+            }
+        }
+
         $this->resumen = [
-            'total_general' => $totalGeneral,
-            'count_total' => $countTotal,
+            'total_general' => $totalVisible,
+            'count_total' => $countVisible,
             'por_categoria' => [],
         ];
 
         foreach ($this->categorias as $key => $cat) {
+            if (in_array($key, $ocultas)) {
+                continue;
+            }
             if ($countPorCategoria[$key] > 0 || $key === 'sin_clasificar') {
                 $this->resumen['por_categoria'][$key] = [
                     'total' => $totalesPorCategoria[$key],
                     'count' => $countPorCategoria[$key],
-                    'pct' => $totalGeneral > 0 ? round($totalesPorCategoria[$key] / $totalGeneral * 100, 1) : 0,
+                    'pct' => $totalVisible > 0 ? round($totalesPorCategoria[$key] / $totalVisible * 100, 1) : 0,
                 ];
             }
         }
 
-        // Datos para grafico
+        // Datos para grafico: solo categorias visibles
         $this->datosGrafico = [];
         foreach ($this->categorias as $key => $cat) {
-            if ($totalesPorCategoria[$key] > 0) {
+            if ($totalesPorCategoria[$key] > 0 && !in_array($key, $ocultas)) {
                 $this->datosGrafico[$key] = round($totalesPorCategoria[$key], 2);
+            }
+        }
+
+        // Datos mensuales: filtrar categorias ocultas
+        if (!empty($ocultas)) {
+            foreach ($mensual as $mes => $cats) {
+                foreach ($ocultas as $oc) {
+                    unset($mensual[$mes][$oc]);
+                }
             }
         }
 
@@ -293,6 +324,26 @@ class AnalisisLineas extends Controller
         }
 
         return ['sin_clasificar', ''];
+    }
+
+    /**
+     * Lee las categorias ocultas desde la cookie del navegador
+     */
+    private function leerCategoriasOcultas(): array
+    {
+        $raw = $_COOKIE['analisis_cat_hidden'] ?? '';
+        if (empty($raw)) {
+            return [];
+        }
+        $decoded = json_decode(urldecode($raw), true);
+        if (!is_array($decoded)) {
+            return [];
+        }
+        // Validar que cada elemento es una categoria valida
+        $validas = array_keys($this->categorias);
+        return array_values(array_filter($decoded, function ($c) use ($validas) {
+            return in_array($c, $validas);
+        }));
     }
 
     private function normalizarTexto(string $texto): string

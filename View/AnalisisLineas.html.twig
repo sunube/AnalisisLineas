@@ -308,7 +308,7 @@ function saveCategorias() {
     document.querySelectorAll('.cat-visibility-check').forEach(function(chk) {
         if (!chk.checked) hidden.push(chk.getAttribute('data-cat'));
     });
-    setCookie('analisis_cat_hidden', hidden.join(','), COOKIE_DAYS);
+    setCookie('analisis_cat_hidden', JSON.stringify(hidden), COOKIE_DAYS);
     reloadPage0();
 }
 
@@ -329,7 +329,7 @@ function saveSeries() {
     document.querySelectorAll('.serie-visibility-check').forEach(function(chk) {
         if (!chk.checked) hidden.push(chk.getAttribute('data-serie'));
     });
-    setCookie('analisis_series_hidden', hidden.join(','), COOKIE_DAYS);
+    setCookie('analisis_series_hidden', JSON.stringify(hidden), COOKIE_DAYS);
     reloadPage0();
 }
 
